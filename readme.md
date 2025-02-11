@@ -1,63 +1,51 @@
 # CRUD Generator for NestJS
 
-This library provides a simple and efficient way to generate CRUD (Create, Read, Update, Delete) operations for your NestJS applications.
+A CLI tool to generate NestJS CRUD modules from a JSON definition. This tool simplifies the process of creating standard CRUD operations (Create, Read, Update, Delete) for your NestJS entities.
 
 ## Features
-
-- Automatically generates CRUD endpoints
-- Supports TypeORM and Postgresql
-- Easy integration with existing NestJS projects
+- Generate NestJS `Entity`, `Controller`, `Service`, `Module`, and `DTO` files.
+- Automatically pluralizes entity names.
+- Supports custom destination folder for generated files.
+- Easy to use and integrates seamlessly with your NestJS project.
 
 ## Installation
 
-To install the library, use npm or yarn:
+### Global Installation
+
+To install the tool globally, run the following command:
 
 ```bash
-npm install crud-generator-nestjs
-```
-
-or
+npm install -g crud-generator
 
 ```bash
-yarn add crud-generator-nestjs
-```
+crud-generator <jsonPath> [options]
 
-## Usage
-
-1. Import the module in your NestJS application:
-
-```typescript
-import { CrudGeneratorModule } from 'crud-generator-nestjs';
-
-@Module({
-    imports: [CrudGeneratorModule],
-})
-export class AppModule {}
-```
-
-2. Generate CRUD operations for your entities:
+### Example
 
 ```bash
-npx crud-generator ./entity.json --destination ./custom-folder
+crud-generator user.json
 ```
 
-This command will create the necessary files and endpoints for the `User` entity.
-
-## Configuration
-
-You can customize the generated templates by creating a `.crudgenrc` file in the root of your project:
+Given the following `user.json`:
 
 ```json
 {
-    "templatePath": "./custom-templates",
-    "outputPath": "./src/generated"
+    "name": "User",
+    "fields": [
+        {
+            "name": "username",
+            "type": "string"
+        },
+        {
+            "name": "email",
+            "type": "string"
+        },
+        {
+            "name": "age",
+            "type": "number"
+        }
+    ]
 }
 ```
 
-## Contributing
-
-Contributions are welcome! Please open an issue or submit a pull request on GitHub.
-
-## License
-
-This project is licensed under the MIT License.
+This will generate the necessary CRUD files for a `User` entity with `username`, `email`, and `age` fields.
