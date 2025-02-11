@@ -1,16 +1,19 @@
 {
   "name": "crud-generator-nestjs",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "generate-crud": "node index.js"
+  },
+  "bin": {
+    "crud-generator": "./bin/crud-generator.js"
   },
   "keywords": [],
   "author": "Kiki Ginanjar",
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "commander": "^13.1.0"
+    "commander": "^13.1.0",
+    "crud-generator-nestjs": "^1.0.1"
   }
 }
