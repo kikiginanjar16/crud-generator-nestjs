@@ -1,0 +1,16 @@
+{
+  "name": "crud-generator-nestjs",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Kiki Ginanjar",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "commander": "^13.1.0"
+  }
+}
