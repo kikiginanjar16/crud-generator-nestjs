@@ -22,49 +22,49 @@ const generateCrud = (entityConfig, destination) => {
     const entityUpper = entityName.charAt(0).toUpperCase() + entityName.slice(1);
 
     const attributes = entityConfig.fields.map(field => `  ${field.name}: ${field.type};`).join('\n');
-    const entityNames = pluralize(entityName);
+    const entityNames = pluralize(entityLower);
     const files = {
         entity: `import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('${entityNames}')
 export class ${entityUpper} {
-   @PrimaryGeneratedColumn('uuid')
-   id: string;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
 ${entityConfig.fields.map(field => `  @Column()\n  ${field.name}: ${field.type};`).join('\n')}
 }`,
 
         controller: `import { Controller, Get, Post, Body, Param, Delete, Put } from '@nestjs/common';
-import { ${entityUpper}Service } from '../services/${entityLower}.service';
+import { ${entityUpper}UseCase } from '../usecases/${entityLower}.usecase';
 import { Create${entityUpper}Dto, Update${entityUpper}Dto } from '../dtos/${entityLower}.dto';
 
-@Controller('${entityLower}')
+@Controller({ path: '${entityNames}', version: '1' })
 export class ${entityUpper}Controller {
-  constructor(private readonly ${entityLower}Service: ${entityUpper}Service) {}
+  constructor(private readonly ${entityLower}UseCase: ${entityUpper}UseCase) {}
 
   @Post()
   create(@Body() createDto: Create${entityUpper}Dto) {
-    return this.${entityLower}Service.create(createDto);
+    return this.${entityLower}UseCase.create(createDto);
   }
 
   @Get()
   findAll() {
-    return this.${entityLower}Service.findAll();
+    return this.${entityLower}UseCase.findAll();
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.${entityLower}Service.findOne(id);
+    return this.${entityLower}UseCase.findOne(id);
   }
 
   @Put(':id')
   update(@Param('id') id: string, @Body() updateDto: Update${entityUpper}Dto) {
-    return this.${entityLower}Service.update(id, updateDto);
+    return this.${entityLower}UseCase.update(id, updateDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.${entityLower}Service.remove(id);
+    return this.${entityLower}UseCase.remove(id);
   }
 }`,
 
@@ -75,7 +75,7 @@ import { ${entityUpper} } from '../entities/${entityLower}.entity';
 import { Create${entityUpper}Dto, Update${entityUpper}Dto } from '../dtos/${entityLower}.dto';
 
 @Injectable()
-export class ${entityUpper}Service {
+export class ${entityUpper}UseCase {
   constructor(
     @InjectRepository(${entityUpper})
     private ${entityLower}Repository: Repository<${entityUpper}>
@@ -91,7 +91,7 @@ export class ${entityUpper}Service {
   }
 
   findOne(id: string) {
-    return this.${entityLower}Repository.findOne({ where: { id: Number(id) } });
+    return this.${entityLower}Repository.findOne({ where: { id: id } });
   }
 
   update(id: string, updateDto: Update${entityUpper}Dto) {
@@ -106,13 +106,13 @@ export class ${entityUpper}Service {
         module: `import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ${entityUpper}Controller } from '../controllers/${entityLower}.controller';
-import { ${entityUpper}Service } from '../services/${entityLower}.service';
+import { ${entityUpper}UseCase } from '../usecases/${entityLower}.usecase';
 import { ${entityUpper} } from '../entities/${entityLower}.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([${entityUpper}])],
   controllers: [${entityUpper}Controller],
-  providers: [${entityUpper}Service]
+  providers: [${entityUpper}UseCase]
 })
 export class ${entityUpper}Module {}`,
 
@@ -126,7 +126,7 @@ ${attributes}
     };
 
     const basePath = destination || path.join(process.cwd(), entityLower); // Use custom destination if provided
-    const folders = ['entities', 'controllers', 'services', 'dtos', 'modules'];
+    const folders = ['entities', 'controllers', 'usecases', 'dtos', 'modules'];
 
     folders.forEach(folder => {
         const folderPath = path.join(basePath, folder);
@@ -137,7 +137,7 @@ ${attributes}
 
     fs.writeFileSync(path.join(basePath, 'entities', `${entityLower}.entity.ts`), files.entity);
     fs.writeFileSync(path.join(basePath, 'controllers', `${entityLower}.controller.ts`), files.controller);
-    fs.writeFileSync(path.join(basePath, 'services', `${entityLower}.service.ts`), files.service);
+  fs.writeFileSync(path.join(basePath, 'usecases', `${entityLower}.usecase.ts`), files.service);
     fs.writeFileSync(path.join(basePath, 'modules', `${entityLower}.module.ts`), files.module);
     fs.writeFileSync(path.join(basePath, 'dtos', `${entityLower}.dto.ts`), files.dto);
 
