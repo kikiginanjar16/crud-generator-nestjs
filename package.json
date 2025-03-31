@@ -13,6 +13,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "commander": "^13.1.0"
+    "commander": "^13.1.0",
+    "handlebars": "^4.7.8"
   }
 }

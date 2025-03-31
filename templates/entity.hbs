@@ -1,0 +1,29 @@
+import { Entity, Column, PrimaryGeneratedColumn{{#if hasDetails}}, OneToMany{{/if}}{{#if parentEntityLower}},
+ManyToOne{{/if}} } from 'typeorm';
+{{#if hasDetails}}
+import { {{detailEntityUpper}} } from './{{detailEntityLower}}.entity';
+{{/if}}
+{{#if parentEntityLower}}
+import { {{parentEntityUpper}} } from './{{parentEntityLower}}.entity';
+{{/if}}
+
+@Entity('{{entityNames}}')
+export class {{entityUpper}} {
+@PrimaryGeneratedColumn('uuid')
+id: string;
+
+{{#each fields}}
+@Column()
+{{name}}: {{type}};
+{{/each}}
+
+{{#if hasDetails}}
+@OneToMany(() => {{detailEntityUpper}}, ({{detailEntityLower}}) => {{detailEntityLower}}.{{entityLower}})
+{{detailEntityNames}}: {{detailEntityUpper}}[];
+{{/if}}
+
+{{#if parentEntityLower}}
+@ManyToOne(() => {{parentEntityUpper}}, ({{parentEntityLower}}) => {{parentEntityLower}}.{{entityNames}})
+{{parentEntityLower}}: {{parentEntityUpper}};
+{{/if}}
+}

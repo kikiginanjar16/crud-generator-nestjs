@@ -1,0 +1,17 @@
+export class Create{{entityUpper}}Dto {
+{{#each fields}}
+{{name}}: {{type}};
+{{/each}}
+{{#if hasDetails}}
+{{detailEntityNames}}?: any;
+{{/if}}
+}
+
+export class Update{{entityUpper}}Dto {
+{{#each fields}}
+{{name}}: {{type}};
+{{/each}}
+{{#if hasDetails}}
+{{detailEntityNames}}?: any;
+{{/if}}
+}

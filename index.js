@@ -3,157 +3,133 @@
 const fs = require('fs');
 const path = require('path');
 const { Command } = require('commander');
+const Handlebars = require('handlebars');
 
 const program = new Command();
 
 const pluralize = (word) => {
-    if (word.endsWith('y')) {
-        return word.slice(0, -1) + 'ies';
-    } else if (word.endsWith('s')) {
-        return word + 'es';
-    } else {
-        return word + 's';
-    }
+  if (word.endsWith('y')) {
+    return word.slice(0, -1) + 'ies';
+  } else if (word.endsWith('s')) {
+    return word + 'es';
+  } else {
+    return word + 's';
+  }
 };
 
+Handlebars.registerHelper('eq', function (a, b) {
+  return a === b;
+});
+
+// Membaca dan mengkompilasi template dari file
+const templateFiles = {
+  entity: 'entity.hbs',
+  controller: 'controller.hbs',
+  service: 'service.hbs',
+  module: 'module.hbs',
+  dto: 'dto.hbs'
+};
+
+const templates = {};
+Object.keys(templateFiles).forEach(key => {
+  const templatePath = path.join(__dirname, 'templates', templateFiles[key]);
+  const templateContent = fs.readFileSync(templatePath, 'utf8');
+  templates[key] = Handlebars.compile(templateContent);
+});
+
 const generateCrud = (entityConfig, destination) => {
-    const entityName = entityConfig.name;
-    const entityLower = entityName.toLowerCase();
-    const entityUpper = entityName.charAt(0).toUpperCase() + entityName.slice(1);
+  const entityName = entityConfig.name;
+  const entityLower = entityName.toLowerCase();
+  const entityUpper = entityName.charAt(0).toUpperCase() + entityName.slice(1);
+  const entityNames = pluralize(entityLower);
 
-    const attributes = entityConfig.fields.map(field => `  ${field.name}: ${field.type};`).join('\n');
-    const entityNames = pluralize(entityLower);
-    const files = {
-        entity: `import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+  // Data untuk entitas utama
+  const mainTemplateData = {
+    entityLower,
+    entityUpper,
+    entityNames,
+    fields: entityConfig.fields,
+    hasDetails: !!entityConfig.details
+  };
 
-@Entity('${entityNames}')
-export class ${entityUpper} {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-${entityConfig.fields.map(field => `  @Column()\n  ${field.name}: ${field.type};`).join('\n')}
-}`,
-
-        controller: `import { Controller, Get, Post, Body, Param, Delete, Put } from '@nestjs/common';
-import { ${entityUpper}UseCase } from '../usecases/${entityLower}.usecase';
-import { Create${entityUpper}Dto, Update${entityUpper}Dto } from '../dtos/${entityLower}.dto';
-
-@Controller({ path: '${entityNames}', version: '1' })
-export class ${entityUpper}Controller {
-  constructor(private readonly ${entityLower}UseCase: ${entityUpper}UseCase) {}
-
-  @Post()
-  create(@Body() createDto: Create${entityUpper}Dto) {
-    return this.${entityLower}UseCase.create(createDto);
+  if (entityConfig.details) {
+    mainTemplateData.detailEntityLower = entityConfig.details.name.toLowerCase();
+    mainTemplateData.detailEntityUpper = entityConfig.details.name.charAt(0).toUpperCase() + entityConfig.details.name.slice(1);
+    mainTemplateData.detailEntityNames = pluralize(mainTemplateData.detailEntityLower);
   }
 
-  @Get()
-  findAll() {
-    return this.${entityLower}UseCase.findAll();
-  }
+  // Generate file untuk entitas utama
+  const mainFiles = {
+    entity: templates.entity(mainTemplateData),
+    controller: templates.controller(mainTemplateData),
+    service: templates.service(mainTemplateData),
+    module: templates.module(mainTemplateData),
+    dto: templates.dto(mainTemplateData),
+    hasDetails: !!entityConfig.details
+  };
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.${entityLower}UseCase.findOne(id);
-  }
+  const basePath = destination || path.join(process.cwd(), entityLower);
+  const folders = ['entities', 'controllers', 'usecases', 'dtos', 'modules'];
 
-  @Put(':id')
-  update(@Param('id') id: string, @Body() updateDto: Update${entityUpper}Dto) {
-    return this.${entityLower}UseCase.update(id, updateDto);
-  }
+  folders.forEach(folder => {
+    const folderPath = path.join(basePath, folder);
+    if (!fs.existsSync(folderPath)) {
+      fs.mkdirSync(folderPath, { recursive: true });
+    }
+  });
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.${entityLower}UseCase.remove(id);
-  }
-}`,
+  // Tulis file entitas utama
+  fs.writeFileSync(path.join(basePath, 'entities', `${entityLower}.entity.ts`), mainFiles.entity);
+  fs.writeFileSync(path.join(basePath, 'controllers', `${entityLower}.controller.ts`), mainFiles.controller);
+  fs.writeFileSync(path.join(basePath, 'usecases', `${entityLower}.usecase.ts`), mainFiles.service);
+  fs.writeFileSync(path.join(basePath, 'modules', `${entityLower}.module.ts`), mainFiles.module);
+  fs.writeFileSync(path.join(basePath, 'dtos', `${entityLower}.dto.ts`), mainFiles.dto);
 
-        service: `import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { ${entityUpper} } from '../entities/${entityLower}.entity';
-import { Create${entityUpper}Dto, Update${entityUpper}Dto } from '../dtos/${entityLower}.dto';
+  // Generate file untuk detail jika ada
+  if (entityConfig.details) {
+    const detailEntityName = entityConfig.details.name;
+    const detailEntityLower = detailEntityName.toLowerCase();
+    const detailEntityUpper = detailEntityName.charAt(0).toUpperCase() + detailEntityName.slice(1);
+    const detailEntityNames = pluralize(detailEntityLower);
 
-@Injectable()
-export class ${entityUpper}UseCase {
-  constructor(
-    @InjectRepository(${entityUpper})
-    private ${entityLower}Repository: Repository<${entityUpper}>
-  ) {}
-
-  create(createDto: Create${entityUpper}Dto) {
-    const newEntity = this.${entityLower}Repository.create(createDto);
-    return this.${entityLower}Repository.save(newEntity);
-  }
-
-  findAll() {
-    return this.${entityLower}Repository.find();
-  }
-
-  findOne(id: string) {
-    return this.${entityLower}Repository.findOne({ where: { id: id } });
-  }
-
-  update(id: string, updateDto: Update${entityUpper}Dto) {
-    return this.${entityLower}Repository.update(id, updateDto);
-  }
-
-  remove(id: string) {
-    return this.${entityLower}Repository.delete(id);
-  }
-}`,
-
-        module: `import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ${entityUpper}Controller } from '../controllers/${entityLower}.controller';
-import { ${entityUpper}UseCase } from '../usecases/${entityLower}.usecase';
-import { ${entityUpper} } from '../entities/${entityLower}.entity';
-
-@Module({
-  imports: [TypeOrmModule.forFeature([${entityUpper}])],
-  controllers: [${entityUpper}Controller],
-  providers: [${entityUpper}UseCase]
-})
-export class ${entityUpper}Module {}`,
-
-        dto: `export class Create${entityUpper}Dto {
-${attributes}
-}
-
-export class Update${entityUpper}Dto {
-${attributes}
-}`
+    const detailTemplateData = {
+      entityLower: detailEntityLower,
+      entityUpper: detailEntityUpper,
+      entityNames: detailEntityNames,
+      fields: entityConfig.details.fields,
+      parentEntityLower: entityLower,
+      parentEntityUpper: entityUpper,
+      hasDetails: false // Detail tidak memiliki sub-detail dalam kasus ini
     };
 
-    const basePath = destination || path.join(process.cwd(), entityLower); // Use custom destination if provided
-    const folders = ['entities', 'controllers', 'usecases', 'dtos', 'modules'];
+    const detailFiles = {
+      entity: templates.entity(detailTemplateData),
+      controller: templates.controller(detailTemplateData),
+      service: templates.service(detailTemplateData),
+      module: templates.module(detailTemplateData),
+      dto: templates.dto(detailTemplateData)
+    };
 
-    folders.forEach(folder => {
-        const folderPath = path.join(basePath, folder);
-        if (!fs.existsSync(folderPath)) {
-            fs.mkdirSync(folderPath, { recursive: true });
-        }
-    });
+    fs.writeFileSync(path.join(basePath, 'entities', `${detailEntityLower}.entity.ts`), detailFiles.entity);
+    fs.writeFileSync(path.join(basePath, 'controllers', `${detailEntityLower}.controller.ts`), detailFiles.controller);
+    fs.writeFileSync(path.join(basePath, 'usecases', `${detailEntityLower}.usecase.ts`), detailFiles.service);
+    fs.writeFileSync(path.join(basePath, 'modules', `${detailEntityLower}.module.ts`), detailFiles.module);
+    fs.writeFileSync(path.join(basePath, 'dtos', `${detailEntityLower}.dto.ts`), detailFiles.dto);
+  }
 
-    fs.writeFileSync(path.join(basePath, 'entities', `${entityLower}.entity.ts`), files.entity);
-    fs.writeFileSync(path.join(basePath, 'controllers', `${entityLower}.controller.ts`), files.controller);
-  fs.writeFileSync(path.join(basePath, 'usecases', `${entityLower}.usecase.ts`), files.service);
-    fs.writeFileSync(path.join(basePath, 'modules', `${entityLower}.module.ts`), files.module);
-    fs.writeFileSync(path.join(basePath, 'dtos', `${entityLower}.dto.ts`), files.dto);
-
-    console.log(`${entityUpper} CRUD with structured folders generated successfully in ${basePath}!`);
+  console.log(`${entityUpper} CRUD with structured folders generated successfully in ${basePath}!`);
 };
 
 program
-    .name('crud-generator')
-    .description('A CLI tool to generate NestJS CRUD modules from a JSON definition')
-    .version('1.0.0')
-    .argument('<jsonPath>', 'Path to JSON file defining entity')
-    .option('-d, --destination <path>', 'Custom destination folder for generated files') // Add custom destination argument
-    .action((jsonPath, options) => {
-        const entityConfig = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
-        generateCrud(entityConfig, options.destination); // Pass the custom destination to the function
-    });
+  .name('crud-generator')
+  .description('A CLI tool to generate NestJS CRUD modules from a JSON definition')
+  .version('1.0.0')
+  .argument('<jsonPath>', 'Path to JSON file defining entity')
+  .option('-d, --destination <path>', 'Custom destination folder for generated files')
+  .action((jsonPath, options) => {
+    const entityConfig = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+    generateCrud(entityConfig, options.destination);
+  });
 
 program.parse(process.argv);
 

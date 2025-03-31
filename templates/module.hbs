@@ -1,0 +1,16 @@
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { {{entityUpper}}Controller } from '../controllers/{{entityLower}}.controller';
+import { {{entityUpper}}UseCase } from '../usecases/{{entityLower}}.usecase';
+import { {{entityUpper}} } from '../entities/{{entityLower}}.entity';
+{{#if hasDetails}}
+import { {{detailEntityUpper}} } from '../entities/{{detailEntityLower}}.entity';
+{{/if}}
+@Module({
+imports: [TypeOrmModule.forFeature([{{entityUpper}}
+{{#if hasDetails}}, {{detailEntityUpper}}{{/if}}
+])],
+controllers: [{{entityUpper}}Controller],
+providers: [{{entityUpper}}UseCase]
+})
+export class {{entityUpper}}Module {}

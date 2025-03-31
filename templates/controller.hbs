@@ -1,0 +1,38 @@
+import { Controller, Get, Post, Body, Param, Delete, Put, Req, Res } from '@nestjs/common';
+import { {{entityUpper}}UseCase } from '../usecases/{{entityLower}}.usecase';
+import { Create{{entityUpper}}Dto, Update{{entityUpper}}Dto } from '../dtos/{{entityLower}}.dto';
+import { Response, Request } from 'express';
+
+@Controller({ path: '{{entityNames}}', version: '1' })
+export class {{entityUpper}}Controller {
+constructor(private readonly {{entityLower}}UseCase: {{entityUpper}}UseCase) {}
+
+@Post()
+create(@Body() createDto: Create{{entityUpper}}Dto) {
+return this.{{entityLower}}UseCase.create(createDto);
+}
+
+@Get()
+findAll(
+    @Res() res: Response,
+    @Req() req: Request
+) {
+    const query = req.query;
+    return this.{{entityLower}}UseCase.findAll(query);
+}
+
+@Get(':id')
+findOne(@Param('id') id: string) {
+return this.{{entityLower}}UseCase.findOne(id);
+}
+
+@Put(':id')
+update(@Param('id') id: string, @Body() updateDto: Update{{entityUpper}}Dto) {
+return this.{{entityLower}}UseCase.update(id, updateDto);
+}
+
+@Delete(':id')
+remove(@Param('id') id: string) {
+return this.{{entityLower}}UseCase.remove(id);
+}
+}
