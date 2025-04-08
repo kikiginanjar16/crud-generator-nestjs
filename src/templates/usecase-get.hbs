@@ -10,7 +10,7 @@ export class Get{{name}}UseCase {
     private {{nameLower}}Repository: Repository<{{name}}>,
   ) {}
 
-  async execute(id: number): Promise<{{name}} | undefined> {
+  async execute(id: string): Promise<{{name}} | undefined> {
     return this.{{nameLower}}Repository.findOne({ where: { id } });
   }
 

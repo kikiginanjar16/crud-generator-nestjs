@@ -38,12 +38,12 @@ export class {{name}}Controller {
 
   @Get()
   async findAll(
-    @Query('page') page: string = '1',
-    @Query('limit') limit: string = '10',
+    @Query('page') page: number = '1',
+    @Query('limit') limit: number = '10',
     @Res() res: Response,
   ) {
     try {
-      const result = await this.get{{name}}UseCase.getAll(+page, +limit);
+      const result = await this.get{{name}}UseCase.getAll(page, limit);
       return res.status(200).json({
         status: true,
         message: '{{name}}s retrieved successfully',
@@ -68,7 +68,7 @@ export class {{name}}Controller {
   @Get(':id')
   async findOne(@Param('id') id: string, @Res() res: Response) {
     try {
-      const data = await this.get{{name}}UseCase.execute(+id);
+      const data = await this.get{{name}}UseCase.execute(id);
       if (!data) {
         return res.status(404).json({
           status: false,
@@ -100,7 +100,7 @@ export class {{name}}Controller {
     @Res() res: Response,
   ) {
     try {
-      const data = await this.update{{name}}UseCase.execute(+id, update{{name}}Dto);
+      const data = await this.update{{name}}UseCase.execute(id, update{{name}}Dto);
       if (!data) {
         return res.status(404).json({
           status: false,
@@ -128,7 +128,7 @@ export class {{name}}Controller {
   @Delete(':id')
   async remove(@Param('id') id: string, @Res() res: Response) {
     try {
-      const success = await this.delete{{name}}UseCase.execute(+id);
+      const success = await this.delete{{name}}UseCase.execute(id);
       if (!success) {
         return res.status(404).json({
           status: false,

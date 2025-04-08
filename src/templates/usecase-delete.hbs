@@ -10,7 +10,7 @@ export class Delete{{name}}UseCase {
     private {{nameLower}}Repository: Repository<{{name}}>,
   ) {}
 
-  async execute(id: number): Promise<boolean> {
+  async execute(id: string): Promise<boolean> {
     const result = await this.{{nameLower}}Repository.delete(id);
     return result.affected > 0;
   }

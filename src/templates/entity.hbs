@@ -1,17 +1,41 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
 
 @Entity()
 export class {{name}} {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   {{#each fields}}
-  @Column({ 
-    type: '{{mapColumnType type}}'{{#if (eq type 'varchar')}}, length: 255{{/if}}
+  @Column({
+  type: '{{mapColumnType type}}'{{#if (eq type 'varchar')}}, length: 255{{/if}}
   })
   {{name}}: {{mapTsType type}};
   {{/each}}
 
-  @CreateDateColumn()
-  createdAt: Date;
+  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  created_at: Date;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  created_by: string;
+
+  @Column({ type: 'uuid',nullable: true })
+  created_id: string;
+
+  @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  updated_at: Date;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  updated_by: string;
+
+  @Column({ type: 'uuid', nullable: true })
+  updated_id: string;
+
+  @Column({ type: 'timestamp', nullable: true })
+  deleted_at: Date;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  deleted_by: string;
+
+  @Column({ type: 'uuid', nullable: true })
+  deleted_id: string;
 }

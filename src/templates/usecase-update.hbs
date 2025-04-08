@@ -11,7 +11,7 @@ export class Update{{name}}UseCase {
     private {{nameLower}}Repository: Repository<{{name}}>,
   ) {}
 
-  async execute(id: number, update{{name}}Dto: Update{{name}}Dto): Promise<{{name}} | undefined> {
+  async execute(id: string, update{{name}}Dto: Update{{name}}Dto): Promise<{{name}} | undefined> {
     await this.{{nameLower}}Repository.update(id, update{{name}}Dto);
     return this.{{nameLower}}Repository.findOne({ where: { id } });
   }
