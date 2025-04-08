@@ -15,18 +15,20 @@ A CLI tool to generate NestJS CRUD modules from a JSON definition. This tool sim
 To install the tool globally, run the following command:
 
 ```bash
-npm install -g crud-generator
+npm install -g crud-generator-nestjs
+
+npm i crud-generator-nestjs
 
 ```bash
-crud-generator <jsonPath> [options]
+crud-generator-nestjs <jsonPath> [options]
 
 ### Example
 
 ```bash
-crud-generator user.json
+crud-generator-nestjs example.json
 ```
 
-Given the following `user.json`:
+Given the following `example.json`:
 
 ```json
 [{
