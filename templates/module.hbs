@@ -1,16 +1,20 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { {{entityUpper}}Controller } from '../controllers/{{entityLower}}.controller';
-import { {{entityUpper}}UseCase } from '../usecases/{{entityLower}}.usecase';
-import { {{entityUpper}} } from '../entities/{{entityLower}}.entity';
-{{#if hasDetails}}
-import { {{detailEntityUpper}} } from '../entities/{{detailEntityLower}}.entity';
-{{/if}}
+import { {{name}}Controller } from './controllers/{{entity}}.controller';
+import { Create{{name}}UseCase } from './usecases/create-{{entity}}.usecase';
+import { Get{{name}}UseCase } from './usecases/get-{{entity}}.usecase';
+import { Update{{name}}UseCase } from './usecases/update-{{entity}}.usecase';
+import { Delete{{name}}UseCase } from './usecases/delete-{{entity}}.usecase';
+import { {{name}} } from '../../entities/{{entity}}.entity';
+
 @Module({
-imports: [TypeOrmModule.forFeature([{{entityUpper}}
-{{#if hasDetails}}, {{detailEntityUpper}}{{/if}}
-])],
-controllers: [{{entityUpper}}Controller],
-providers: [{{entityUpper}}UseCase]
+  imports: [TypeOrmModule.forFeature([{{name}}])],
+  controllers: [{{name}}Controller],
+  providers: [
+    Create{{name}}UseCase,
+    Get{{name}}UseCase,
+    Update{{name}}UseCase,
+    Delete{{name}}UseCase,
+  ],
 })
-export class {{entityUpper}}Module {}
+export class {{name}}Module {}

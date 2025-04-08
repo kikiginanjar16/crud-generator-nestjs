@@ -1,29 +1,17 @@
-import { Entity, Column, PrimaryGeneratedColumn{{#if hasDetails}}, OneToMany{{/if}}{{#if parentEntityLower}},
-ManyToOne{{/if}} } from 'typeorm';
-{{#if hasDetails}}
-import { {{detailEntityUpper}} } from './{{detailEntityLower}}.entity';
-{{/if}}
-{{#if parentEntityLower}}
-import { {{parentEntityUpper}} } from './{{parentEntityLower}}.entity';
-{{/if}}
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
 
-@Entity('{{entityNames}}')
-export class {{entityUpper}} {
-@PrimaryGeneratedColumn('uuid')
-id: string;
+@Entity()
+export class {{name}} {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-{{#each fields}}
-@Column()
-{{name}}: {{type}};
-{{/each}}
+  {{#each fields}}
+  @Column({ 
+    type: '{{mapColumnType type}}'{{#if (eq type 'varchar')}}, length: 255{{/if}}
+  })
+  {{name}}: {{mapTsType type}};
+  {{/each}}
 
-{{#if hasDetails}}
-@OneToMany(() => {{detailEntityUpper}}, ({{detailEntityLower}}) => {{detailEntityLower}}.{{entityLower}})
-{{detailEntityNames}}: {{detailEntityUpper}}[];
-{{/if}}
-
-{{#if parentEntityLower}}
-@ManyToOne(() => {{parentEntityUpper}}, ({{parentEntityLower}}) => {{parentEntityLower}}.{{entityNames}})
-{{parentEntityLower}}: {{parentEntityUpper}};
-{{/if}}
+  @CreateDateColumn()
+  createdAt: Date;
 }

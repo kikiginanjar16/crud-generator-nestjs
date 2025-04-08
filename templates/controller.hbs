@@ -1,38 +1,155 @@
-import { Controller, Get, Post, Body, Param, Delete, Put, Req, Res } from '@nestjs/common';
-import { {{entityUpper}}UseCase } from '../usecases/{{entityLower}}.usecase';
-import { Create{{entityUpper}}Dto, Update{{entityUpper}}Dto } from '../dtos/{{entityLower}}.dto';
-import { Response, Request } from 'express';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, Res } from '@nestjs/common';
+import { Response } from 'express';
+import { Create{{name}}UseCase } from '../usecases/create-{{entity}}.usecase';
+import { Get{{name}}UseCase } from '../usecases/get-{{entity}}.usecase';
+import { Update{{name}}UseCase } from '../usecases/update-{{entity}}.usecase';
+import { Delete{{name}}UseCase } from '../usecases/delete-{{entity}}.usecase';
+import { Create{{name}}Dto } from '../dto/create-{{entity}}.dto';
+import { Update{{name}}Dto } from '../dto/update-{{entity}}.dto';
 
-@Controller({ path: '{{entityNames}}', version: '1' })
-export class {{entityUpper}}Controller {
-constructor(private readonly {{entityLower}}UseCase: {{entityUpper}}UseCase) {}
+@Controller('{{entityNames}}')
+export class {{name}}Controller {
+  constructor(
+    private readonly create{{name}}UseCase: Create{{name}}UseCase,
+    private readonly get{{name}}UseCase: Get{{name}}UseCase,
+    private readonly update{{name}}UseCase: Update{{name}}UseCase,
+    private readonly delete{{name}}UseCase: Delete{{name}}UseCase,
+  ) {}
 
-@Post()
-create(@Body() createDto: Create{{entityUpper}}Dto) {
-return this.{{entityLower}}UseCase.create(createDto);
-}
+  @Post()
+  async create(@Body() create{{name}}Dto: Create{{name}}Dto, @Res() res: Response) {
+    try {
+      const data = await this.create{{name}}UseCase.execute(create{{name}}Dto);
+      return res.status(201).json({
+        status: true,
+        message: '{{name}} created successfully',
+        data,
+        meta: undefined,
+      });
+    } catch (error) {
+      return res.status(400).json({
+        status: false,
+        message: error.message || 'Failed to create {{name}}',
+        data: null,
+        meta: undefined,
+      });
+    }
+  }
 
-@Get()
-findAll(
+  @Get()
+  async findAll(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
     @Res() res: Response,
-    @Req() req: Request
-) {
-    const query = req.query;
-    return this.{{entityLower}}UseCase.findAll(query);
-}
+  ) {
+    try {
+      const result = await this.get{{name}}UseCase.getAll(+page, +limit);
+      return res.status(200).json({
+        status: true,
+        message: '{{name}}s retrieved successfully',
+        data: result.data,
+        meta: {
+          total: result.total,
+          page: result.page,
+          lastPage: result.lastPage,
+          limit: +limit,
+        },
+      });
+    } catch (error) {
+      return res.status(400).json({
+        status: false,
+        message: error.message || 'Failed to retrieve {{name}}s',
+        data: null,
+        meta: undefined,
+      });
+    }
+  }
 
-@Get(':id')
-findOne(@Param('id') id: string) {
-return this.{{entityLower}}UseCase.findOne(id);
-}
+  @Get(':id')
+  async findOne(@Param('id') id: string, @Res() res: Response) {
+    try {
+      const data = await this.get{{name}}UseCase.execute(+id);
+      if (!data) {
+        return res.status(404).json({
+          status: false,
+          message: '{{name}} not found',
+          data: null,
+          meta: undefined,
+        });
+      }
+      return res.status(200).json({
+        status: true,
+        message: '{{name}} retrieved successfully',
+        data,
+        meta: undefined,
+      });
+    } catch (error) {
+      return res.status(400).json({
+        status: false,
+        message: error.message || 'Failed to retrieve {{name}}',
+        data: null,
+        meta: undefined,
+      });
+    }
+  }
 
-@Put(':id')
-update(@Param('id') id: string, @Body() updateDto: Update{{entityUpper}}Dto) {
-return this.{{entityLower}}UseCase.update(id, updateDto);
-}
+  @Put(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() update{{name}}Dto: Update{{name}}Dto,
+    @Res() res: Response,
+  ) {
+    try {
+      const data = await this.update{{name}}UseCase.execute(+id, update{{name}}Dto);
+      if (!data) {
+        return res.status(404).json({
+          status: false,
+          message: '{{name}} not found',
+          data: null,
+          meta: undefined,
+        });
+      }
+      return res.status(200).json({
+        status: true,
+        message: '{{name}} updated successfully',
+        data,
+        meta: undefined,
+      });
+    } catch (error) {
+      return res.status(400).json({
+        status: false,
+        message: error.message || 'Failed to update {{name}}',
+        data: null,
+        meta: undefined,
+      });
+    }
+  }
 
-@Delete(':id')
-remove(@Param('id') id: string) {
-return this.{{entityLower}}UseCase.remove(id);
-}
+  @Delete(':id')
+  async remove(@Param('id') id: string, @Res() res: Response) {
+    try {
+      const success = await this.delete{{name}}UseCase.execute(+id);
+      if (!success) {
+        return res.status(404).json({
+          status: false,
+          message: '{{name}} not found',
+          data: null,
+          meta: undefined,
+        });
+      }
+      return res.status(200).json({
+        status: true,
+        message: '{{name}} deleted successfully',
+        data: null,
+        meta: undefined,
+      });
+    } catch (error) {
+      return res.status(400).json({
+        status: false,
+        message: error.message || 'Failed to delete {{name}}',
+        data: null,
+        meta: undefined,
+      });
+    }
+  }
 }

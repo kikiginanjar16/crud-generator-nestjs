@@ -1,0 +1,11 @@
+export class Create{{name}}Dto {
+  {{#each fields}}
+  {{name}}: {{mapTsType type}};
+  {{/each}}
+
+  constructor(data: Create{{name}}Dto) {
+    {{#each fields}}
+    this.{{name}} = data.{{name}};
+    {{/each}}
+  }
+}

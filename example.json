@@ -1,46 +1,36 @@
-{
-    "name": "Transaction",
-    "fields": [
-        {
-            "name": "name",
-            "type": "string"
-        },
-        {
-            "name": "description",
-            "type": "string"
-        },
-        {
-            "name": "nomor",
-            "type": "string"
-        },
-        {
-            "name": "total",
-            "type": "number"
-        }
-    ],
-    "details":{
-        "name": "TransactionDetail",
+[
+    {
+        "name": "User",
+        "entity":"user",
+        "routes": "users",
         "fields": [
             {
-                "name": "transactionId",
-                "type": "number"
+                "name": "username",
+                "type": "string"
             },
             {
-                "name": "productId",
-                "type": "number"
+                "name": "email",
+                "type": "string"
             },
             {
-                "name": "qty",
-                "type": "number"
-            },
-            {
-                "name": "price",
-                "type": "number"
-            },
-            {
-                "name": "total",
+                "name": "age",
                 "type": "number"
             }
         ]
+    },
+    {
+        "name": "UserDetail",
+        "entity":"userDetail",
+        "routes": "user-details",
+        "fields": [
+            {
+                "name": "user_id",
+                "type": "string"
+            },
+            {
+                "name": "address",
+                "type": "string"
+            }
+        ]
     }
-}
+]

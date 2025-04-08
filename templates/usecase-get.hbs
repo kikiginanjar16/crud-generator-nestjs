@@ -1,0 +1,32 @@
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { {{name}} } from '../../../entities/{{entity}}.entity';
+
+@Injectable()
+export class Get{{name}}UseCase {
+  constructor(
+    @InjectRepository({{name}})
+    private {{nameLower}}Repository: Repository<{{name}}>,
+  ) {}
+
+  async execute(id: number): Promise<{{name}} | undefined> {
+    return this.{{nameLower}}Repository.findOne({ where: { id } });
+  }
+
+  async getAll(page: number = 1, limit: number = 10): Promise<{ data: {{name}}[], total: number, page: number, lastPage: number }> {
+    const [data, total] = await this.{{nameLower}}Repository.findAndCount({
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    const lastPage = Math.ceil(total / limit);
+
+    return {
+      data,
+      total,
+      page,
+      lastPage,
+    };
+  }
+}

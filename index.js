@@ -1,123 +1,94 @@
-#!/usr/bin/env node
-
-const fs = require('fs');
-const path = require('path');
 const { Command } = require('commander');
-const Handlebars = require('handlebars');
-
+const fs = require('fs');
+const handlebars = require('handlebars');
+const path = require('path');
 const program = new Command();
 
-const pluralize = (word) => {
-  if (word.endsWith('y')) {
-    return word.slice(0, -1) + 'ies';
-  } else if (word.endsWith('s')) {
-    return word + 'es';
-  } else {
-    return word + 's';
-  }
-};
-
-Handlebars.registerHelper('eq', function (a, b) {
+handlebars.registerHelper('eq', function (a, b) {
   return a === b;
 });
 
-// Membaca dan mengkompilasi template dari file
-const templateFiles = {
-  entity: 'entity.hbs',
-  controller: 'controller.hbs',
-  service: 'service.hbs',
-  module: 'module.hbs',
-  dto: 'dto.hbs'
-};
 
-const templates = {};
-Object.keys(templateFiles).forEach(key => {
-  const templatePath = path.join(__dirname, 'templates', templateFiles[key]);
-  const templateContent = fs.readFileSync(templatePath, 'utf8');
-  templates[key] = Handlebars.compile(templateContent);
+// Helper untuk memetakan tipe kolom TypeORM
+handlebars.registerHelper('mapColumnType', function (type) {
+  const typeMap = {
+    string: 'varchar',
+    number: 'integer',
+    text: 'text',
+    boolean: 'boolean',
+    datetime: 'timestamp',
+    timestamp: 'timestamp',
+    uuid: 'uuid',
+    varchar: 'varchar',
+  };
+  return typeMap[type] || 'varchar'; // default ke varchar jika tipe tidak dikenal
 });
 
-const generateCrud = (entityConfig, destination) => {
-  const entityName = entityConfig.name;
-  const entityLower = entityName.toLowerCase();
-  const entityUpper = entityName.charAt(0).toUpperCase() + entityName.slice(1);
-  const entityNames = pluralize(entityLower);
-
-  // Data untuk entitas utama
-  const mainTemplateData = {
-    entityLower,
-    entityUpper,
-    entityNames,
-    fields: entityConfig.fields,
-    hasDetails: !!entityConfig.details
+// Helper untuk memetakan tipe TypeScript
+handlebars.registerHelper('mapTsType', function (type) {
+  const tsTypeMap = {
+    string: 'string',
+    number: 'number',
+    text: 'string',
+    boolean: 'boolean',
+    datetime: 'Date',
+    timestamp: 'Date',
+    uuid: 'string',
+    varchar: 'string',
   };
+  return tsTypeMap[type] || 'string'; // default ke string jika tipe tidak dikenal
+});
 
-  if (entityConfig.details) {
-    mainTemplateData.detailEntityLower = entityConfig.details.name.toLowerCase();
-    mainTemplateData.detailEntityUpper = entityConfig.details.name.charAt(0).toUpperCase() + entityConfig.details.name.slice(1);
-    mainTemplateData.detailEntityNames = pluralize(mainTemplateData.detailEntityLower);
-  }
+// Helper untuk equals
+handlebars.registerHelper('eq', function (a, b) {
+  return a === b;
+});
 
-  // Generate file untuk entitas utama
-  const mainFiles = {
-    entity: templates.entity(mainTemplateData),
-    controller: templates.controller(mainTemplateData),
-    service: templates.service(mainTemplateData),
-    module: templates.module(mainTemplateData),
-    dto: templates.dto(mainTemplateData),
-    hasDetails: !!entityConfig.details
-  };
+const generateCrud = (config) => {
+  config.forEach((entityConfig) => {
+    const name = entityConfig.name; // Nama kelas (User, UserDetail)
+    const entity = entityConfig.entity; // Nama entitas (User, UserDetail)
+    const entityLower = entityConfig.entity.toLowerCase(); // Nama entitas (user, userDetail)
+    const routes = entityConfig.routes; // Nama rute (users, user-details)
+    const nameLower = name.toLowerCase(); // Untuk konsistensi penamaan file
+    const nameUpper = nameLower.charAt(0).toUpperCase() + nameLower.slice(1);
 
-  const basePath = destination || path.join(process.cwd(), entityLower);
-  const folders = ['entities', 'controllers', 'usecases', 'dtos', 'modules'];
+    const templates = [
+      { name: 'controller', output: `controllers/${entity}.controller.ts` },
+      { name: 'entity', output: `../../entities/${entity}.entity.ts` },
+      { name: 'dto-create', output: `dto/create-${entity}.dto.ts` },
+      { name: 'dto-update', output: `dto/update-${entity}.dto.ts` },
+      { name: 'usecase-create', output: `usecases/create-${entity}.usecase.ts` },
+      { name: 'usecase-get', output: `usecases/get-${entity}.usecase.ts` },
+      { name: 'usecase-update', output: `usecases/update-${entity}.usecase.ts` },
+      { name: 'usecase-delete', output: `usecases/delete-${entity}.usecase.ts` },
+      { name: 'module', output: `${entity}.module.ts` },
+    ];
 
-  folders.forEach(folder => {
-    const folderPath = path.join(basePath, folder);
-    if (!fs.existsSync(folderPath)) {
-      fs.mkdirSync(folderPath, { recursive: true });
-    }
+    const basePath = `src/modules/${entity}`;
+    fs.mkdirSync(basePath, { recursive: true });
+    fs.mkdirSync(`${basePath}/controllers`, { recursive: true });
+    fs.mkdirSync(`${basePath}/usecases`, { recursive: true });
+    fs.mkdirSync(`${basePath}/dto`, { recursive: true });
+    fs.mkdirSync(`src/entities`, { recursive: true });
+
+    console.log(`Created: ${basePath}`);
+
+    templates.forEach((template) => {
+      const templateContent = fs.readFileSync(`templates/${template.name}.hbs`, 'utf-8');
+      const compiledTemplate = handlebars.compile(templateContent);
+      const content = compiledTemplate({
+        name,           // Nama kelas (User, UserDetail)
+        entity,         // Nama entitas (User, UserDetail)
+        nameLower: entityLower, // Nama file dan variabel (user, userDetail)
+        entityNames: routes,    // Nama rute (users, user-details)
+        fields: entityConfig.fields // Field dari config
+      });
+      const outputPath = path.join(basePath, template.output);
+      fs.writeFileSync(outputPath, content);
+      console.log(`Created: ${outputPath}`);
+    });
   });
-
-  // Tulis file entitas utama
-  fs.writeFileSync(path.join(basePath, 'entities', `${entityLower}.entity.ts`), mainFiles.entity);
-  fs.writeFileSync(path.join(basePath, 'controllers', `${entityLower}.controller.ts`), mainFiles.controller);
-  fs.writeFileSync(path.join(basePath, 'usecases', `${entityLower}.usecase.ts`), mainFiles.service);
-  fs.writeFileSync(path.join(basePath, 'modules', `${entityLower}.module.ts`), mainFiles.module);
-  fs.writeFileSync(path.join(basePath, 'dtos', `${entityLower}.dto.ts`), mainFiles.dto);
-
-  // Generate file untuk detail jika ada
-  if (entityConfig.details) {
-    const detailEntityName = entityConfig.details.name;
-    const detailEntityLower = detailEntityName.toLowerCase();
-    const detailEntityUpper = detailEntityName.charAt(0).toUpperCase() + detailEntityName.slice(1);
-    const detailEntityNames = pluralize(detailEntityLower);
-
-    const detailTemplateData = {
-      entityLower: detailEntityLower,
-      entityUpper: detailEntityUpper,
-      entityNames: detailEntityNames,
-      fields: entityConfig.details.fields,
-      parentEntityLower: entityLower,
-      parentEntityUpper: entityUpper,
-      hasDetails: false // Detail tidak memiliki sub-detail dalam kasus ini
-    };
-
-    const detailFiles = {
-      entity: templates.entity(detailTemplateData),
-      controller: templates.controller(detailTemplateData),
-      service: templates.service(detailTemplateData),
-      module: templates.module(detailTemplateData),
-      dto: templates.dto(detailTemplateData)
-    };
-
-    fs.writeFileSync(path.join(basePath, 'entities', `${detailEntityLower}.entity.ts`), detailFiles.entity);
-    fs.writeFileSync(path.join(basePath, 'controllers', `${detailEntityLower}.controller.ts`), detailFiles.controller);
-    fs.writeFileSync(path.join(basePath, 'usecases', `${detailEntityLower}.usecase.ts`), detailFiles.service);
-    fs.writeFileSync(path.join(basePath, 'modules', `${detailEntityLower}.module.ts`), detailFiles.module);
-    fs.writeFileSync(path.join(basePath, 'dtos', `${detailEntityLower}.dto.ts`), detailFiles.dto);
-  }
-
-  console.log(`${entityUpper} CRUD with structured folders generated successfully in ${basePath}!`);
 };
 
 program
@@ -125,12 +96,10 @@ program
   .description('A CLI tool to generate NestJS CRUD modules from a JSON definition')
   .version('1.0.0')
   .argument('<jsonPath>', 'Path to JSON file defining entity')
-  .option('-d, --destination <path>', 'Custom destination folder for generated files')
   .action((jsonPath, options) => {
-    const entityConfig = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
-    generateCrud(entityConfig, options.destination);
+    const config = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+    generateCrud(config, options);
   });
 
-program.parse(process.argv);
-
-module.exports = { generateCrud };
+  program.parse(process.argv);
+  module.exports = { generateCrud };

@@ -1,0 +1,9 @@
+export class Update{{name}}Dto {
+  {{#each fields}}
+  {{name}}?: {{mapTsType type}};
+  {{/each}}
+
+  constructor(data: Partial<Update{{name}}Dto>) {
+    Object.assign(this, data);
+  }
+}
