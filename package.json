@@ -1,9 +1,9 @@
 {
   "name": "crud-generator-nestjs",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "main": "index.js",
   "bin": {
-    "crud-generator": "./index.js"
+    "crud-generator": "index.js"
   },
   "scripts": {
     "start": "node index.js"
@@ -14,7 +14,6 @@
   "description": "",
   "dependencies": {
     "commander": "^13.1.0",
-    "handlebars": "^4.7.8",
-    "openai": "^4.89.1"
+    "handlebars": "^4.7.8"
   }
 }
