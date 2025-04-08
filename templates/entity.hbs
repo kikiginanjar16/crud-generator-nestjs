@@ -1,0 +1,17 @@
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+
+@Entity()
+export class {{name}} {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  {{#each fields}}
+  @Column({ 
+    type: '{{mapColumnType type}}'{{#if (eq type 'varchar')}}, length: 255{{/if}}
+  })
+  {{name}}: {{mapTsType type}};
+  {{/each}}
+
+  @CreateDateColumn()
+  createdAt: Date;
+}

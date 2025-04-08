@@ -1,17 +1,36 @@
-{
-    "name": "User",
-    "fields": [
-        {
-            "name": "username",
-            "type": "string"
-        },
-        {
-            "name": "email",
-            "type": "string"
-        },
-        {
-            "name": "age",
-            "type": "number"
-        }
-    ]
-}
+[
+    {
+        "name": "User",
+        "entity":"user",
+        "routes": "users",
+        "fields": [
+            {
+                "name": "username",
+                "type": "string"
+            },
+            {
+                "name": "email",
+                "type": "string"
+            },
+            {
+                "name": "age",
+                "type": "number"
+            }
+        ]
+    },
+    {
+        "name": "UserDetail",
+        "entity":"userDetail",
+        "routes": "user-details",
+        "fields": [
+            {
+                "name": "user_id",
+                "type": "string"
+            },
+            {
+                "name": "address",
+                "type": "string"
+            }
+        ]
+    }
+]

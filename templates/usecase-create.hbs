@@ -1,0 +1,18 @@
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { {{name}} } from '../../../entities/{{entity}}.entity';
+import { Create{{name}}Dto } from '../dto/create-{{entity}}.dto';
+
+@Injectable()
+export class Create{{name}}UseCase {
+  constructor(
+    @InjectRepository({{name}})
+    private {{nameLower}}Repository: Repository<{{name}}>,
+  ) {}
+
+  async execute(create{{name}}Dto: Create{{name}}Dto): Promise<{{name}}> {
+    const {{nameLower}} = this.{{nameLower}}Repository.create(create{{name}}Dto);
+    return this.{{nameLower}}Repository.save({{nameLower}});
+  }
+}

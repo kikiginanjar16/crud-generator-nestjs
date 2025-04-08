@@ -1,0 +1,17 @@
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { {{name}} } from '../../../entities/{{entity}}.entity';
+
+@Injectable()
+export class Delete{{name}}UseCase {
+  constructor(
+    @InjectRepository({{name}})
+    private {{nameLower}}Repository: Repository<{{name}}>,
+  ) {}
+
+  async execute(id: number): Promise<boolean> {
+    const result = await this.{{nameLower}}Repository.delete(id);
+    return result.affected > 0;
+  }
+}

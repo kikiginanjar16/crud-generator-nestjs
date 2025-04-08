@@ -1,0 +1,20 @@
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { {{name}}Controller } from './controllers/{{entity}}.controller';
+import { Create{{name}}UseCase } from './usecases/create-{{entity}}.usecase';
+import { Get{{name}}UseCase } from './usecases/get-{{entity}}.usecase';
+import { Update{{name}}UseCase } from './usecases/update-{{entity}}.usecase';
+import { Delete{{name}}UseCase } from './usecases/delete-{{entity}}.usecase';
+import { {{name}} } from '../../entities/{{entity}}.entity';
+
+@Module({
+  imports: [TypeOrmModule.forFeature([{{name}}])],
+  controllers: [{{name}}Controller],
+  providers: [
+    Create{{name}}UseCase,
+    Get{{name}}UseCase,
+    Update{{name}}UseCase,
+    Delete{{name}}UseCase,
+  ],
+})
+export class {{name}}Module {}

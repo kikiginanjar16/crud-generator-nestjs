@@ -29,8 +29,10 @@ crud-generator user.json
 Given the following `user.json`:
 
 ```json
-{
+[{
     "name": "User",
+    "entity":"user",
+    "routes": "users",
     "fields": [
         {
             "name": "username",
@@ -45,7 +47,7 @@ Given the following `user.json`:
             "type": "number"
         }
     ]
-}
+}]
 ```
 
 This will generate the necessary CRUD files for a `User` entity with `username`, `email`, and `age` fields.
