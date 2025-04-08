@@ -92,7 +92,7 @@ const generateCrud = (config) => {
 };
 
 program
-  .name('crud-generator')
+  .name('crud-generator-nestjs')
   .description('A CLI tool to generate NestJS CRUD modules from a JSON definition')
   .version('1.0.0')
   .argument('<jsonPath>', 'Path to JSON file defining entity')
