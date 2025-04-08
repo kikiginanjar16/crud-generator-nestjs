@@ -1,9 +1,9 @@
 {
   "name": "crud-generator-nestjs",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "main": "index.js",
   "bin": {
-    "crud-generator": "index.js"
+    "crud-generator-nestjs": "index.js"
   },
   "scripts": {
     "start": "node index.js"

@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const { Command } = require('commander');
 const fs = require('fs');
 const handlebars = require('handlebars');
@@ -94,7 +96,7 @@ const generateCrud = (config) => {
 program
   .name('crud-generator-nestjs')
   .description('A CLI tool to generate NestJS CRUD modules from a JSON definition')
-  .version('1.0.0')
+  .version('1.1.1')
   .argument('<jsonPath>', 'Path to JSON file defining entity')
   .action((jsonPath, options) => {
     const config = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
