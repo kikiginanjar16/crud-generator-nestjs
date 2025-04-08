@@ -1,6 +1,7 @@
 {
   "name": "crud-generator-nestjs",
-  "version": "1.1.1",
+  "version": "1.1.2",
+  "description": "A CLI tool to generate NestJS CRUD modules",
   "main": "index.js",
   "bin": {
     "crud-generator-nestjs": "index.js"
@@ -8,12 +9,15 @@
   "scripts": {
     "start": "node index.js"
   },
-  "keywords": [],
-  "author": "Kiki Ginanjar",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
     "commander": "^13.1.0",
     "handlebars": "^4.7.8"
-  }
+  },
+  "keywords": ["nestjs", "crud", "generator"],
+  "author": "Kiki Ginanjar",
+  "license": "MIT",
+  "files": [
+    "index.js",
+    "src/templates/*.hbs"
+  ]
 }

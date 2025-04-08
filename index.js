@@ -6,10 +6,12 @@ const handlebars = require('handlebars');
 const path = require('path');
 const program = new Command();
 
+// Tentukan lokasi template secara dinamis relatif terhadap index.js
+const templatesDir = path.join(__dirname, 'src', 'templates');
+
 handlebars.registerHelper('eq', function (a, b) {
   return a === b;
 });
-
 
 // Helper untuk memetakan tipe kolom TypeORM
 handlebars.registerHelper('mapColumnType', function (type) {
@@ -67,17 +69,19 @@ const generateCrud = (config) => {
       { name: 'module', output: `${entity}.module.ts` },
     ];
 
-    const basePath = `src/modules/${entity}`;
+    // Gunakan current working directory sebagai base path
+    const basePath = path.join(process.cwd(), 'src', 'modules', entity);
     fs.mkdirSync(basePath, { recursive: true });
-    fs.mkdirSync(`${basePath}/controllers`, { recursive: true });
-    fs.mkdirSync(`${basePath}/usecases`, { recursive: true });
-    fs.mkdirSync(`${basePath}/dto`, { recursive: true });
-    fs.mkdirSync(`src/entities`, { recursive: true });
+    fs.mkdirSync(path.join(basePath, 'controllers'), { recursive: true });
+    fs.mkdirSync(path.join(basePath, 'usecases'), { recursive: true });
+    fs.mkdirSync(path.join(basePath, 'dto'), { recursive: true });
+    fs.mkdirSync(path.join(process.cwd(), 'src', 'entities'), { recursive: true });
 
     console.log(`Created: ${basePath}`);
 
     templates.forEach((template) => {
-      const templateContent = fs.readFileSync(`templates/${template.name}.hbs`, 'utf-8');
+      const templatePath = path.join(templatesDir, `${template.name}.hbs`);
+      const templateContent = fs.readFileSync(templatePath, 'utf-8');
       const compiledTemplate = handlebars.compile(templateContent);
       const content = compiledTemplate({
         name,           // Nama kelas (User, UserDetail)
@@ -103,5 +107,5 @@ program
     generateCrud(config, options);
   });
 
-  program.parse(process.argv);
-  module.exports = { generateCrud };
+program.parse(process.argv);
+module.exports = { generateCrud };
