@@ -1,8 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { {{name}} } from '../../../entities/{{entity}}.entity';
 import { Create{{name}}Dto } from '../dto/create-{{entity}}.dto';
+
+interface LoggedUser { id: string; name: string }
 
 @Injectable()
 export class Create{{name}}UseCase {
@@ -11,8 +13,24 @@ export class Create{{name}}UseCase {
     private {{nameLower}}Repository: Repository<{{name}}>,
   ) {}
 
-  async execute(create{{name}}Dto: Create{{name}}Dto): Promise<{{name}}> {
-    const {{nameLower}} = this.{{nameLower}}Repository.create(create{{name}}Dto);
-    return this.{{nameLower}}Repository.save({{nameLower}});
+  async execute(create{{name}}Dto: Create{{name}}Dto, logged?: LoggedUser): Promise<{{name}}> {
+    try {
+      // Validate DTO
+      if (!create{{name}}Dto) {
+        throw new BadRequestException('Create{{name}}Dto is required');
+      }
+
+      // Create entity with audit fields
+      const {{nameLower}} = this.{{nameLower}}Repository.create({
+        ...create{{name}}Dto,
+        created_by: create{{name}}Dto.created_by || logged?.name || 'system',
+        created_id: create{{name}}Dto.created_id || logged?.id || null,
+      });
+
+      // Save entity
+      return await this.{{nameLower}}Repository.save({{nameLower}});
+    } catch (error) {
+      throw new BadRequestException(`Failed to create {{name}}: ${error.message}`);
+    }
   }
 }

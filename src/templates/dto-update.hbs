@@ -1,9 +1,26 @@
+import { ApiProperty } from '@nestjs/swagger';
+{{#if fields}}
+{{#each fields}}
+{{#if (eq type 'enum')}}
+export enum {{tsEnumName}} {
+  {{#each enumValues}}
+  {{toUpperCase this}} = '{{this}}',
+  {{/each}}
+}
+{{/if}}
+{{/each}}
+{{/if}}
+
 export class Update{{name}}Dto {
   {{#each fields}}
-  {{name}}?: {{mapTsType type}};
+  @ApiProperty({
+    description: '{{description}}'{{#if (eq type 'enum')}},
+    enum: {{tsEnumName}}{{/if}}{{#if example}},
+    example: {{example}}{{/if}}{{#if (eq type 'array')}},
+    type: [{{mapTsType arrayType}}]{{/if}}{{#if (eq type 'uuid')}},
+    format: 'uuid'{{/if}},
+    required: false
+  })
+  {{name}}?: {{mapTsType type this}};
   {{/each}}
-
-  constructor(data: Partial<Update{{name}}Dto>) {
-    Object.assign(this, data);
-  }
 }

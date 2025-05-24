@@ -1,8 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { {{name}} } from '../../../entities/{{entity}}.entity';
 import { Update{{name}}Dto } from '../dto/update-{{entity}}.dto';
+
+interface LoggedUser { id: string; name: string }
 
 @Injectable()
 export class Update{{name}}UseCase {
@@ -11,8 +13,33 @@ export class Update{{name}}UseCase {
     private {{nameLower}}Repository: Repository<{{name}}>,
   ) {}
 
-  async execute(id: string, update{{name}}Dto: Update{{name}}Dto): Promise<{{name}} | undefined> {
-    await this.{{nameLower}}Repository.update(id, update{{name}}Dto);
-    return this.{{nameLower}}Repository.findOne({ where: { id } });
+  async execute(id: string, update{{name}}Dto: Update{{name}}Dto, logged?: LoggedUser): Promise<{{name}}> {
+    try {
+      // Validate inputs
+      if (!id || !update{{name}}Dto) {
+        throw new BadRequestException('ID and Update{{name}}Dto are required');
+      }
+
+      // Check if entity exists and is not soft-deleted
+      const {{nameLower}} = await this.{{nameLower}}Repository.findOne({ where: { id, deleted_at: null } });
+      if (!{{nameLower}}) {
+        throw new NotFoundException(`{{name}} with ID ${id} not found or has been deleted`);
+      }
+
+      // Update entity with audit fields
+      await this.{{nameLower}}Repository.update(id, {
+        ...update{{name}}Dto,
+        updated_by: update{{name}}Dto.updated_by || logged?.name || 'system',
+        updated_id: update{{name}}Dto.updated_id || logged?.id || null,
+      });
+
+      // Return updated entity
+      return await this.{{nameLower}}Repository.findOne({ where: { id } });
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new BadRequestException(`Failed to update {{name}}: ${error.message}`);
+    }
   }
 }

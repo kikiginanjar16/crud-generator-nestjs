@@ -1,12 +1,43 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, Query, Res } from '@nestjs/common';
 import { Response } from 'express';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';
 import { Create{{name}}UseCase } from '../usecases/create-{{entity}}.usecase';
 import { Get{{name}}UseCase } from '../usecases/get-{{entity}}.usecase';
 import { Update{{name}}UseCase } from '../usecases/update-{{entity}}.usecase';
 import { Delete{{name}}UseCase } from '../usecases/delete-{{entity}}.usecase';
 import { Create{{name}}Dto } from '../dto/create-{{entity}}.dto';
 import { Update{{name}}Dto } from '../dto/update-{{entity}}.dto';
+import { {{name}} } from '../../entities/{{entity}}.entity';
 
+class PaginationMeta {
+  @ApiProperty({ description: 'Total number of items', example: 100 })
+  total: number;
+
+  @ApiProperty({ description: 'Current page number', example: 1 })
+  page: number;
+
+  @ApiProperty({ description: 'Last page number', example: 10 })
+  total_page: number;
+
+  @ApiProperty({ description: 'Number of items per page', example: 10 })
+  limit: number;
+}
+
+class ApiResponseDto<T> {
+  @ApiProperty({ description: 'Status of the response', example: true })
+  status: boolean;
+
+  @ApiProperty({ description: 'Response message', example: '{{name}} retrieved successfully' })
+  message: string;
+
+  @ApiProperty({ description: 'Response data', type: () => {{name}} })
+  data: T;
+
+  @ApiProperty({ description: 'Pagination metadata', type: () => PaginationMeta, required: false })
+  meta?: PaginationMeta;
+}
+
+@ApiTags('{{entityNames}}')
 @Controller('{{entityNames}}')
 export class {{name}}Controller {
   constructor(
@@ -17,9 +48,14 @@ export class {{name}}Controller {
   ) {}
 
   @Post()
+  @ApiOperation({ summary: 'Create a new {{name}}' })
+  @ApiBody({ type: Create{{name}}Dto })
+  @ApiResponse({ status: 201, description: 'The {{name}} has been successfully created.', type: ApiResponseDto })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
   async create(@Body() create{{name}}Dto: Create{{name}}Dto, @Res() res: Response) {
     try {
-      const data = await this.create{{name}}UseCase.execute(create{{name}}Dto);
+      const logged = res.locals.logged;
+      const data = await this.create{{name}}UseCase.execute(create{{name}}Dto, logged);
       return res.status(201).json({
         status: true,
         message: '{{name}} created successfully',
@@ -37,13 +73,19 @@ export class {{name}}Controller {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Retrieve all {{name}}s with pagination' })
+  @ApiQuery({ name: 'page', type: Number, required: false, example: 1 })
+  @ApiQuery({ name: 'limit', type: Number, required: false, example: 10 })
+  @ApiResponse({ status: 200, description: 'List of {{name}}s retrieved successfully.', type: () => ApiResponseDto })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
   async findAll(
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
     @Res() res: Response,
   ) {
     try {
-      const result = await this.get{{name}}UseCase.getAll(page, limit);
+      const logged = res.locals.logged;
+      const result = await this.get{{name}}UseCase.getAll(page, limit, {}, { field: 'created_at', order: 'DESC' }, []);
       return res.status(200).json({
         status: true,
         message: '{{name}}s retrieved successfully',
@@ -51,8 +93,8 @@ export class {{name}}Controller {
         meta: {
           total: result.total,
           page: result.page,
-          lastPage: result.lastPage,
-          limit: +limit,
+          total_page: result.total_page,
+          limit,
         },
       });
     } catch (error) {
@@ -66,9 +108,15 @@ export class {{name}}Controller {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Retrieve a {{name}} by ID' })
+  @ApiParam({ name: 'id', type: String, description: 'ID of the {{name}}', example: '123e4567-e89b-12d3-a456-426614174000' })
+  @ApiResponse({ status: 200, description: '{{name}} retrieved successfully.', type: ApiResponseDto })
+  @ApiResponse({ status: 404, description: '{{name}} not found' })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
   async findOne(@Param('id') id: string, @Res() res: Response) {
     try {
-      const data = await this.get{{name}}UseCase.execute(id);
+      const logged = res.locals.logged;
+      const data = await this.get{{name}}UseCase.execute(id, [], logged);
       if (!data) {
         return res.status(404).json({
           status: false,
@@ -94,13 +142,20 @@ export class {{name}}Controller {
   }
 
   @Put(':id')
+  @ApiOperation({ summary: 'Update a {{name}} by ID' })
+  @ApiParam({ name: 'id', type: String, description: 'ID of the {{name}}', example: '123e4567-e89b-12d3-a456-426614174000' })
+  @ApiBody({ type: Update{{name}}Dto })
+  @ApiResponse({ status: 200, description: '{{name}} updated successfully.', type: ApiResponseDto })
+  @ApiResponse({ status: 404, description: '{{name}} not found' })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
   async update(
     @Param('id') id: string,
     @Body() update{{name}}Dto: Update{{name}}Dto,
     @Res() res: Response,
   ) {
     try {
-      const data = await this.update{{name}}UseCase.execute(id, update{{name}}Dto);
+      const logged = res.locals.logged;
+      const data = await this.update{{name}}UseCase.execute(id, update{{name}}Dto, logged);
       if (!data) {
         return res.status(404).json({
           status: false,
@@ -126,9 +181,15 @@ export class {{name}}Controller {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete a {{name}} by ID' })
+  @ApiParam({ name: 'id', type: String, description: 'ID of the {{name}}', example: '123e4567-e89b-12d3-a456-426614174000' })
+  @ApiResponse({ status: 200, description: '{{name}} deleted successfully.', type: ApiResponseDto })
+  @ApiResponse({ status: 404, description: '{{name}} not found' })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
   async remove(@Param('id') id: string, @Res() res: Response) {
     try {
-      const success = await this.delete{{name}}UseCase.execute(id);
+      const logged = res.locals.logged;
+      const success = await this.delete{{name}}UseCase.execute(id, logged);
       if (!success) {
         return res.status(404).json({
           status: false,

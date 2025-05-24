@@ -1,36 +1,43 @@
 [
     {
-        "name": "User",
-        "entity":"user",
-        "routes": "users",
-        "fields": [
-            {
-                "name": "username",
-                "type": "string"
-            },
-            {
-                "name": "email",
-                "type": "string"
-            },
-            {
-                "name": "age",
-                "type": "number"
-            }
-        ]
-    },
-    {
-        "name": "UserDetail",
-        "entity":"userDetail",
-        "routes": "user-details",
-        "fields": [
-            {
-                "name": "user_id",
-                "type": "string"
-            },
-            {
-                "name": "address",
-                "type": "string"
-            }
-        ]
+      "name": "User",
+      "entity": "User",
+      "routes": "users",
+      "idType": "uuid",
+      "fields": [
+        {
+          "name": "email",
+          "type": "varchar",
+          "length": 255,
+          "unique": true,
+          "nullable": false,
+          "description": "User's email address",
+          "example": "user@example.com"
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "enumValues": ["active", "inactive"],
+          "tsEnumName": "UserStatus",
+          "description": "User account status",
+          "example": "active"
+        },
+        {
+          "name": "tags",
+          "type": "array",
+          "arrayType": "varchar",
+          "description": "List of user tags",
+          "example": ["admin", "verified"]
+        },
+        {
+          "name": "posts",
+          "type": "one-to-many",
+          "target": "Post",
+          "inverseSide": "user",
+          "cascade": true,
+          "description": "Posts authored by the user",
+          "example": []
+        }
+      ]
     }
-]
+  ]

@@ -1,7 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { {{name}} } from '../../../entities/{{entity}}.entity';
+
+interface LoggedUser { id: string; name: string }
 
 @Injectable()
 export class Delete{{name}}UseCase {
@@ -10,8 +12,37 @@ export class Delete{{name}}UseCase {
     private {{nameLower}}Repository: Repository<{{name}}>,
   ) {}
 
-  async execute(id: string): Promise<boolean> {
-    const result = await this.{{nameLower}}Repository.delete(id);
-    return result.affected > 0;
+  async execute(id: string, logged?: LoggedUser): Promise<boolean> {
+    try {
+      if (!id) {
+        throw new BadRequestException('ID is required');
+      }
+
+      // Check if entity exists and is not already soft-deleted
+      const {{nameLower}} = await this.{{nameLower}}Repository.findOne({ where: { id, deleted_at: null } });
+      if (!{{nameLower}}) {
+        throw new NotFoundException(`{{name}} with ID ${id} not found or has been deleted`);
+      }
+
+      // Perform soft delete with audit fields
+      const result = await this.{{nameLower}}Repository.softDelete({
+        id,
+        deleted_at: null,
+      });
+
+      if (result.affected > 0) {
+        await this.{{nameLower}}Repository.update(id, {
+          deleted_by: logged?.name || 'system',
+          deleted_id: logged?.id || null,
+        });
+      }
+
+      return result.affected > 0;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new BadRequestException(`Failed to delete {{name}}: ${error.message}`);
+    }
   }
 }

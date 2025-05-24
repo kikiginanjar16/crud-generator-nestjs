@@ -1,7 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { {{name}} } from '../../../entities/{{entity}}.entity';
+
+interface LoggedUser { id: string; name: string }
 
 @Injectable()
 export class Get{{name}}UseCase {
@@ -10,23 +12,62 @@ export class Get{{name}}UseCase {
     private {{nameLower}}Repository: Repository<{{name}}>,
   ) {}
 
-  async execute(id: string): Promise<{{name}} | undefined> {
-    return this.{{nameLower}}Repository.findOne({ where: { id } });
+  async execute(id: string, relations: string[] = [], logged?: LoggedUser): Promise<{{name}} | null> {
+    try {
+      if (!id) {
+        throw new BadRequestException('ID is required');
+      }
+
+      const {{nameLower}} = await this.{{nameLower}}Repository.findOne({ 
+        where: { id, deleted_at: null },
+        relations,
+      });
+
+      if (!{{nameLower}}) {
+        throw new NotFoundException(`{{name}} with ID ${id} not found or has been deleted`);
+      }
+
+      return {{nameLower}};
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new BadRequestException(`Failed to retrieve {{name}}: ${error.message}`);
+    }
   }
 
-  async getAll(page: number = 1, limit: number = 10): Promise<{ data: {{name}}[], total: number, page: number, lastPage: number }> {
-    const [data, total] = await this.{{nameLower}}Repository.findAndCount({
-      skip: (page - 1) * limit,
-      take: limit,
-    });
+  async getAll(
+    page: number = 1,
+    limit: number = 10,
+    filters: Partial<{{name}}> = {},
+    sort: { field: keyof {{name}}; order: 'ASC' | 'DESC' } = { field: 'created_at', order: 'DESC' },
+    relations: string[] = [],
+    logged?: LoggedUser
+  ): Promise<{ data: {{name}}[], total: number, page: number, total_page: number }> {
+    try {
+      if (page < 1 || limit < 1) {
+        throw new BadRequestException('Page and limit must be positive numbers');
+      }
 
-    const lastPage = Math.ceil(total / limit);
+      const where = { ...filters, deleted_at: null };
+      const [data, total] = await this.{{nameLower}}Repository.findAndCount({
+        where,
+        relations,
+        order: { [sort.field]: sort.order },
+        skip: (page - 1) * limit,
+        take: limit,
+      });
 
-    return {
-      data,
-      total,
-      page,
-      lastPage,
-    };
+      const total_page = Math.ceil(total / limit);
+
+      return {
+        data,
+        total,
+        page,
+        total_page,
+      };
+    } catch (error) {
+      throw new BadRequestException(`Failed to retrieve {{name}}s: ${error.message}`);
+    }
   }
 }
