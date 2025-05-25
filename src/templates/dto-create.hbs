@@ -1,25 +1,54 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsOptional, IsString, IsNumber, IsNotEmpty, IsUUID, IsEnum, IsArray } from 'class-validator';
+
 {{#if fields}}
 {{#each fields}}
 {{#if (eq type 'enum')}}
 export enum {{tsEnumName}} {
-  {{#each enumValues}}
+{{#each enumValues}}
   {{toUpperCase this}} = '{{this}}',
-  {{/each}}
+{{/each}}
 }
 {{/if}}
 {{/each}}
 {{/if}}
 
 export class Create{{name}}Dto {
-  {{#each fields}}
+{{#each fields}}
   @ApiProperty({
     description: '{{description}}'{{#if (eq type 'enum')}},
     enum: {{tsEnumName}}{{/if}}{{#if example}},
     example: '{{example}}'{{/if}}{{#if (eq type 'array')}},
     type: [{{mapTsType arrayType}}]{{/if}}{{#if (eq type 'uuid')}},
-    format: 'uuid'{{/if}}
+    format: 'uuid'{{/if}}{{#if required}},
+    required: true{{/if}}{{#if default}},
+    default: {{default}}{{/if}}
   })
-  public {{name}}: {{mapTsType type this}};
-  {{/each}}
+{{#if required}}
+  @IsNotEmpty()
+{{/if}}
+{{#if (eq type 'string')}}
+  @IsString()
+{{/if}}
+{{#if (eq type 'number')}}
+  @IsNumber()
+{{/if}}
+{{#if (eq type 'uuid')}}
+  @IsUUID('4')
+{{/if}}
+{{#if (eq type 'enum')}}
+  @IsEnum({{tsEnumName}})
+{{/if}}
+{{#if (eq type 'array')}}
+  @IsArray()
+  {{#if arrayType}}
+  @Is{{capitalize (mapTsType arrayType)}}({{if (eq arrayType 'string') '' 'each: true'}})
+  {{/if}}
+{{/if}}
+{{#unless required}}
+  @IsOptional()
+{{/unless}}
+  public {{name}}: {{mapTsType type this}}{{#if (eq type 'array')}}[]{{/if}}{{#unless required}} | undefined{{/unless}};
+
+{{/each}}
 }
