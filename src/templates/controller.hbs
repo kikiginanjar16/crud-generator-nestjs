@@ -1,41 +1,15 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, Res } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, Res, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { Response } from 'express';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';
 import { Create{{name}}UseCase } from '../usecases/create-{{entity}}.usecase';
 import { Get{{name}}UseCase } from '../usecases/get-{{entity}}.usecase';
 import { Update{{name}}UseCase } from '../usecases/update-{{entity}}.usecase';
 import { Delete{{name}}UseCase } from '../usecases/delete-{{entity}}.usecase';
+{{#if fields}}{{#each fields}}{{#if (eq type "file")}}import { Upload{{name}}UseCase } from '../usecases/upload-{{entity}}.usecase';
+import { FileInterceptor } from '@nestjs/platform-express';
+{{/if}}{{/each}}{{/if}}
 import { Create{{name}}Dto } from '../dto/create-{{entity}}.dto';
 import { Update{{name}}Dto } from '../dto/update-{{entity}}.dto';
-import { {{name}} } from '../../entities/{{entity}}.entity';
-
-class PaginationMeta {
-  @ApiProperty({ description: 'Total number of items', example: 100 })
-  total: number;
-
-  @ApiProperty({ description: 'Current page number', example: 1 })
-  page: number;
-
-  @ApiProperty({ description: 'Last page number', example: 10 })
-  total_page: number;
-
-  @ApiProperty({ description: 'Number of items per page', example: 10 })
-  limit: number;
-}
-
-class ApiResponseDto<T> {
-  @ApiProperty({ description: 'Status of the response', example: true })
-  status: boolean;
-
-  @ApiProperty({ description: 'Response message', example: '{{name}} retrieved successfully' })
-  message: string;
-
-  @ApiProperty({ description: 'Response data', type: () => {{name}} })
-  data: T;
-
-  @ApiProperty({ description: 'Pagination metadata', type: () => PaginationMeta, required: false })
-  meta?: PaginationMeta;
-}
 
 @ApiTags('{{entityNames}}')
 @Controller('{{entityNames}}')
@@ -45,172 +19,173 @@ export class {{name}}Controller {
     private readonly get{{name}}UseCase: Get{{name}}UseCase,
     private readonly update{{name}}UseCase: Update{{name}}UseCase,
     private readonly delete{{name}}UseCase: Delete{{name}}UseCase,
+    {{#if fields}}{{#each fields}}{{#if (eq type "file")}}
+    private readonly upload{{name}}UseCase: Upload{{name}}UseCase,
+    {{/if}}{{/each}}{{/if}}
   ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new {{name}}' })
   @ApiBody({ type: Create{{name}}Dto })
-  @ApiResponse({ status: 201, description: 'The {{name}} has been successfully created.', type: ApiResponseDto })
   @ApiResponse({ status: 400, description: 'Bad Request' })
   async create(@Body() create{{name}}Dto: Create{{name}}Dto, @Res() res: Response) {
     try {
-      const logged = res.locals.logged;
-      const data = await this.create{{name}}UseCase.execute(create{{name}}Dto, logged);
+      const data = await this.create{{name}}UseCase.execute(create{{name}}Dto, res.locals.logged);
       return res.status(201).json({
         status: true,
         message: '{{name}} created successfully',
         data,
-        meta: undefined,
       });
     } catch (error) {
       return res.status(400).json({
         status: false,
-        message: error.message || 'Failed to create {{name}}',
-        data: null,
-        meta: undefined,
+        message: error.message,
       });
     }
   }
 
   @Get()
-  @ApiOperation({ summary: 'Retrieve all {{name}}s with pagination' })
-  @ApiQuery({ name: 'page', type: Number, required: false, example: 1 })
-  @ApiQuery({ name: 'limit', type: Number, required: false, example: 10 })
-  @ApiResponse({ status: 200, description: 'List of {{name}}s retrieved successfully.', type: () => ApiResponseDto })
+  @ApiOperation({ summary: 'Get all {{name}}s' })
   @ApiResponse({ status: 400, description: 'Bad Request' })
   async findAll(
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
-    @Res() res: Response,
+    @Res() res: Response, 
+    @Query() page: number, 
+    @Query() limit: number
   ) {
     try {
-      const logged = res.locals.logged;
-      const result = await this.get{{name}}UseCase.getAll(page, limit, {}, { field: 'created_at', order: 'DESC' }, []);
+      const data = await this.get{{name}}UseCase.paginate(page, limit, {}, [], res.locals.logged);
       return res.status(200).json({
         status: true,
         message: '{{name}}s retrieved successfully',
-        data: result.data,
-        meta: {
-          total: result.total,
-          page: result.page,
-          total_page: result.total_page,
-          limit,
-        },
+        data,
       });
     } catch (error) {
       return res.status(400).json({
         status: false,
-        message: error.message || 'Failed to retrieve {{name}}s',
-        data: null,
-        meta: undefined,
+        message: error.message,
       });
     }
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Retrieve a {{name}} by ID' })
-  @ApiParam({ name: 'id', type: String, description: 'ID of the {{name}}', example: '123e4567-e89b-12d3-a456-426614174000' })
-  @ApiResponse({ status: 200, description: '{{name}} retrieved successfully.', type: ApiResponseDto })
-  @ApiResponse({ status: 404, description: '{{name}} not found' })
-  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiOperation({ summary: 'Get a {{name}} by ID' })
+  @ApiParam({ name: 'id', type: String, description: 'ID of the {{name}}'{{#if (eq idType "uuid")}}, format: 'uuid'{{/if}}, example: '{{#if (eq idType "uuid")}}123e4567-e89b-12d3-a456-426614174000{{else}}1{{/if}}' })
+  @ApiResponse({ status: 404, description: 'Not Found' })
   async findOne(@Param('id') id: string, @Res() res: Response) {
     try {
-      const logged = res.locals.logged;
-      const data = await this.get{{name}}UseCase.execute(id, [], logged);
+      const data = await this.get{{name}}UseCase.execute(id);
       if (!data) {
         return res.status(404).json({
           status: false,
           message: '{{name}} not found',
-          data: null,
-          meta: undefined,
         });
       }
       return res.status(200).json({
         status: true,
         message: '{{name}} retrieved successfully',
         data,
-        meta: undefined,
       });
     } catch (error) {
       return res.status(400).json({
         status: false,
-        message: error.message || 'Failed to retrieve {{name}}',
-        data: null,
-        meta: undefined,
+        message: error.message,
       });
     }
   }
 
   @Put(':id')
   @ApiOperation({ summary: 'Update a {{name}} by ID' })
-  @ApiParam({ name: 'id', type: String, description: 'ID of the {{name}}', example: '123e4567-e89b-12d3-a456-426614174000' })
+  @ApiParam({ name: 'id', type: String, description: 'ID of the {{name}}'{{#if (eq idType "uuid")}}, format: 'uuid'{{/if}}, example: '{{#if (eq idType "uuid")}}123e4567-e89b-12d3-a456-426614174000{{else}}1{{/if}}' })
   @ApiBody({ type: Update{{name}}Dto })
-  @ApiResponse({ status: 200, description: '{{name}} updated successfully.', type: ApiResponseDto })
-  @ApiResponse({ status: 404, description: '{{name}} not found' })
-  @ApiResponse({ status: 400, description: 'Bad Request' })
-  async update(
-    @Param('id') id: string,
-    @Body() update{{name}}Dto: Update{{name}}Dto,
-    @Res() res: Response,
-  ) {
+  @ApiResponse({ status: 404, description: 'Not Found' })
+  async update(@Param('id') id: string, @Body() update{{name}}Dto: Update{{name}}Dto, @Res() res: Response) {
     try {
-      const logged = res.locals.logged;
-      const data = await this.update{{name}}UseCase.execute(id, update{{name}}Dto, logged);
+      const data = await this.update{{name}}UseCase.execute(id, update{{name}}Dto, res.locals.logged);
       if (!data) {
         return res.status(404).json({
           status: false,
           message: '{{name}} not found',
-          data: null,
-          meta: undefined,
         });
       }
       return res.status(200).json({
         status: true,
         message: '{{name}} updated successfully',
         data,
-        meta: undefined,
       });
     } catch (error) {
       return res.status(400).json({
         status: false,
-        message: error.message || 'Failed to update {{name}}',
-        data: null,
-        meta: undefined,
+        message: error.message,
       });
     }
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete a {{name}} by ID' })
-  @ApiParam({ name: 'id', type: String, description: 'ID of the {{name}}', example: '123e4567-e89b-12d3-a456-426614174000' })
-  @ApiResponse({ status: 200, description: '{{name}} deleted successfully.', type: ApiResponseDto })
-  @ApiResponse({ status: 404, description: '{{name}} not found' })
-  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiOperation({ summary: 'Soft delete a {{name}} by ID' })
+  @ApiParam({ name: 'id', type: String, description: 'ID of the {{name}}'{{#if (eq idType "uuid")}}, format: 'uuid'{{/if}}, example: '{{#if (eq idType "uuid")}}123e4567-e89b-12d3-a456-426614174000{{else}}1{{/if}}' })
+  @ApiResponse({ status: 404, description: 'Not Found' })
   async remove(@Param('id') id: string, @Res() res: Response) {
     try {
-      const logged = res.locals.logged;
-      const success = await this.delete{{name}}UseCase.execute(id, logged);
-      if (!success) {
+      const data = await this.delete{{name}}UseCase.execute(id, res.locals.logged);
+      if (!data) {
         return res.status(404).json({
           status: false,
           message: '{{name}} not found',
-          data: null,
-          meta: undefined,
         });
       }
       return res.status(200).json({
         status: true,
         message: '{{name}} deleted successfully',
-        data: null,
-        meta: undefined,
+        data,
       });
     } catch (error) {
       return res.status(400).json({
         status: false,
-        message: error.message || 'Failed to delete {{name}}',
-        data: null,
-        meta: undefined,
+        message: error.message,
       });
     }
   }
+
+  {{#if fields}}{{#each fields}}{{#if (eq type "file")}}
+  @Post(':id/upload')
+  @ApiOperation({ summary: 'Upload a file for a {{name}}' })
+  @ApiParam({ name: 'id', type: String, description: 'ID of the {{name}}'{{#if (eq idType "uuid")}}, format: 'uuid'{{/if}}, example: '{{#if (eq idType "uuid")}}123e4567-e89b-12d3-a456-426614174000{{else}}1{{/if}}' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: { type: 'string', format: 'binary' },
+      },
+    },
+  })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 404, description: 'Not Found' })
+  @UseInterceptors(FileInterceptor('file'))
+  async upload(
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Res() res: Response,
+  ) {
+    try {
+      if (!file) {
+        return res.status(400).json({
+          status: false,
+          message: 'No file uploaded',
+        });
+      }
+      const data = await this.upload{{name}}UseCase.execute(id, file, res.locals.logged);
+      return res.status(200).json({
+        status: true,
+        message: 'File uploaded successfully',
+        data,
+      });
+    } catch (error) {
+      return res.status(400).json({
+        status: false,
+        message: error.message,
+      });
+    }
+  }
+  {{/if}}{{/each}}{{/if}}
 }

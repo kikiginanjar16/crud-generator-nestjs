@@ -36,11 +36,10 @@ export class Get{{name}}UseCase {
     }
   }
 
-  async getAll(
+  async paginate(
     page: number = 1,
     limit: number = 10,
-    filters: Partial<{{name}}> = {},
-    sort: { field: keyof {{name}}; order: 'ASC' | 'DESC' } = { field: 'created_at', order: 'DESC' },
+    filters: any = {},
     relations: string[] = [],
     logged?: LoggedUser
   ): Promise<{ data: {{name}}[], total: number, page: number, total_page: number }> {

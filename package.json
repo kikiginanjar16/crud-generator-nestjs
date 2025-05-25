@@ -10,14 +10,23 @@
     "start": "node index.js"
   },
   "dependencies": {
+    "@nestjs/platform-express": "^11.1.1",
     "commander": "^13.1.0",
-    "handlebars": "^4.7.8"
+    "handlebars": "^4.7.8",
+    "multer": "^2.0.0"
   },
-  "keywords": ["nestjs", "crud", "generator"],
+  "keywords": [
+    "nestjs",
+    "crud",
+    "generator"
+  ],
   "author": "Kiki Ginanjar",
   "license": "MIT",
   "files": [
     "index.js",
     "src/templates/*.hbs"
-  ]
+  ],
+  "devDependencies": {
+    "@types/multer": "^1.4.12"
+  }
 }

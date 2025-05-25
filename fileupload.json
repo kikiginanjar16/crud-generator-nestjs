@@ -1,0 +1,67 @@
+[
+    {
+      "name": "user",
+      "entity": "user",
+      "routes": "users",
+      "idType": "uuid",
+      "fields": [
+        {
+          "name": "email",
+          "type": "varchar",
+          "length": 255,
+          "unique": true,
+          "nullable": false,
+          "description": "User's email address",
+          "example": "user@example.com"
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "enumValues": ["active", "inactive"],
+          "tsEnumName": "UserStatus",
+          "description": "User account status",
+          "example": "active"
+        },
+        {
+          "name": "tags",
+          "type": "array",
+          "arrayType": "varchar",
+          "description": "List of user tags",
+          "example": ["admin", "verified"]
+        },
+        {
+          "name": "posts",
+          "type": "one-to-many",
+          "target": "Post",
+          "inverseSide": "user",
+          "cascade": true,
+          "description": "Posts authored by the user",
+          "example": []
+        }
+      ]
+    },
+    {
+      "name": "document",
+      "entity": "document",
+      "routes": "documents",
+      "idType": "uuid",
+      "fields": [
+        {
+          "name": "title",
+          "type": "varchar",
+          "length": 255,
+          "nullable": false,
+          "description": "Document title",
+          "example": "Contract"
+        },
+        {
+          "name": "file",
+          "type": "file",
+          "allowedTypes": ["application/pdf", "image/jpeg", "image/png"],
+          "maxSize": 10,
+          "description": "Uploaded document file",
+          "example": { "path": "Uploads/documents/1234567890-file.pdf", "name": "file.pdf", "mimeType": "application/pdf", "size": 1048576 }
+        }
+      ]
+    }
+  ]

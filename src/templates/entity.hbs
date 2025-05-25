@@ -1,5 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn{{#if fields}} {{#each fields}}{{#if (eq type "one-to-many")}}, OneToMany{{/if}}{{#if (eq type "many-to-one")}}, ManyToOne{{/if}}{{#if (eq type "many-to-many")}}, ManyToMany{{/if}}{{#if (eq type "one-to-one")}}, OneToOne{{/if}}{{/each}}{{/if}} } from 'typeorm';
-import { ApiProperty } from '@nestjs/swagger';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, OneToMany, ManyToOne, ManyToMany, OneToOne } from 'typeorm';
 {{#if fields}}
 {{#each fields}}
 {{#if (eq type "one-to-many")}}import { {{target}} } from './{{target}}.entity';
@@ -19,60 +18,46 @@ import { ApiProperty } from '@nestjs/swagger';
 export class {{name}} {
   {{#if (eq idType "uuid")}}
   @PrimaryGeneratedColumn('uuid')
-  @ApiProperty({ description: 'Unique identifier of the {{nameLower}}', format: 'uuid', example: '123e4567-e89b-12d3-a456-426614174000' })
-  id: string;
+  public id: string;
   {{else}}
   @PrimaryGeneratedColumn()
-  @ApiProperty({ description: 'Unique identifier of the {{nameLower}}', type: Number, example: 1 })
-  id: number;
+  public id: number;
   {{/if}}
 
   {{#each fields}}
   {{{mapColumnOptions this}}}
-  @ApiProperty({
-    description: '{{description}}'{{#if (eq type 'enum')}},
-    enum: {{tsEnumName}}{{/if}}{{#if example}},
-    example: {{example}}{{/if}}{{#if (eq type 'array')}},
-    type: [{{mapTsType arrayType}}]{{/if}}{{#if (eq type 'uuid')}},
-    format: 'uuid'{{/if}}{{#if nullable}},
-    nullable: true{{/if}}
-  })
-  {{name}}: {{mapTsType type this}};
+  {{#if (eq type "file")}}
+  @Column({ type: 'json', nullable: true })
+  public {{name}}: any;
+  {{else}}
+  public {{name}}: {{mapTsType type this}};
+  {{/if}}
   {{/each}}
 
   @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  @ApiProperty({ description: 'Creation timestamp', type: Date, example: '2025-05-24T12:06:00Z' })
-  created_at: Date;
+  public created_at: Date;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
-  @ApiProperty({ description: 'User who created the record', type: String, nullable: true, example: 'admin' })
-  created_by: string;
+  public created_by: string;
 
   @Column({ type: 'uuid', nullable: true })
-  @ApiProperty({ description: 'ID of the user who created the record', format: 'uuid', nullable: true, example: '123e4567-e89b-12d3-a456-426614174000' })
-  created_id: string;
+  public created_id: string;
 
   @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
-  @ApiProperty({ description: 'Last update timestamp', type: Date, example: '2025-05-24T12:06:00Z' })
-  updated_at: Date;
+  public updated_at: Date;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
-  @ApiProperty({ description: 'User who updated the record', type: String, nullable: true, example: 'admin' })
-  updated_by: string;
+  public updated_by: string;
 
   @Column({ type: 'uuid', nullable: true })
-  @ApiProperty({ description: 'ID of the user who updated the record', format: 'uuid', nullable: true, example: '123e4567-e89b-12d3-a456-426614174000' })
-  updated_id: string;
+  public updated_id: string;
 
   @DeleteDateColumn({ type: 'timestamp', nullable: true })
-  @ApiProperty({ description: 'Deletion timestamp (soft delete)', type: Date, nullable: true, example: '2025-05-24T12:06:00Z' })
-  deleted_at: Date;
+  public deleted_at: Date;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
-  @ApiProperty({ description: 'User who deleted the record', type: String, nullable: true, example: 'admin' })
-  deleted_by: string;
+  public deleted_by: string;
 
   @Column({ type: 'uuid', nullable: true })
-  @ApiProperty({ description: 'ID of the user who deleted the record', format: 'uuid', nullable: true, example: '123e4567-e89b-12d3-a456-426614174000' })
-  deleted_id: string;
+  public deleted_id: string;
 }

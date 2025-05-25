@@ -31,25 +31,63 @@ crud-generator-nestjs example.json
 Given the following `example.json`:
 
 ```json
-[{
-    "name": "User",
-    "entity":"user",
-    "routes": "users",
+[
+  {
+    "name": "todo",
+    "entity": "todo",
+    "routes": "todos",
+    "idType": "uuid",
     "fields": [
-        {
-            "name": "username",
-            "type": "string"
-        },
-        {
-            "name": "email",
-            "type": "string"
-        },
-        {
-            "name": "age",
-            "type": "number"
-        }
+      {
+        "name": "title",
+        "type": "varchar",
+        "length": 255,
+        "unique": false,
+        "nullable": false,
+        "description": "Title of the todo item",
+        "example": "Complete project report"
+      },
+      {
+        "name": "total",
+        "type": "float",
+        "description": "Total of the todo item",
+        "example": 0
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "unique": false,
+        "nullable": true,
+        "description": "Detailed description of the todo item",
+        "example": "Write and review the final report for the Q2 project"
+      },
+      {
+        "name": "status",
+        "type": "enum",
+        "enumValues": ["pending", "in_progress", "completed"],
+        "tsEnumName": "TodoStatus",
+        "description": "Current status of the todo item",
+        "example": "pending"
+      },
+      {
+        "name": "due_date",
+        "type": "date",
+        "unique": false,
+        "nullable": true,
+        "description": "Due date for the todo item",
+        "example": "2025-06-01"
+      },
+      {
+        "name": "user_id",
+        "type": "uuid",
+        "unique": false,
+        "nullable": false,
+        "description": "ID of the user who owns this todo item",
+        "example": "123e4567-e89b-12d3-a456-426614174000"
+      }
     ]
-}]
+  }
+]
 ```
 
 This will generate the necessary CRUD files for a `User` entity with `username`, `email`, and `age` fields.

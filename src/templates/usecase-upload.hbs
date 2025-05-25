@@ -1,0 +1,73 @@
+import { Injectable, BadRequestException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { {{name}} } from '../../../entities/{{entity}}.entity';
+import { join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
+
+interface LoggedUser { id: string; name: string }
+
+@Injectable()
+export class Upload{{name}}UseCase {
+  constructor(
+    @InjectRepository({{name}})
+    private {{nameLower}}Repository: Repository<{{name}}>,
+  ) {}
+
+  async execute(
+    id: string,
+    file: Express.Multer.File,
+    logged?: LoggedUser
+  ): Promise<{{name}}> {
+    try {
+      if (!id || !file) {
+        throw new BadRequestException('ID and file are required');
+      }
+
+      // Validate file
+      const allowedTypes = [{{#each fields}}{{#if (eq type "file")}}'{{allowedTypes}}'{{#unless @last}}, {{/unless}}{{/if}}{{/each}}];
+      const maxSize = {{#each fields}}{{#if (eq type "file")}}{{maxSize}}{{/if}}{{/each}} * 1024 * 1024; // MB to bytes
+      if (!allowedTypes.includes(file.mimetype)) {
+        throw new BadRequestException(`Invalid file type. Allowed: ${allowedTypes.join(', ')}`);
+      }
+      if (file.size > maxSize) {
+        throw new BadRequestException(`File size exceeds ${maxSize / (1024 * 1024)} MB`);
+      }
+
+      // Check if entity exists and is not soft-deleted
+      const {{nameLower}} = await this.{{nameLower}}Repository.findOne({ where: { id, deleted_at: null } });
+      if (!{{nameLower}}) {
+        throw new BadRequestException(`{{name}} with ID ${id} not found or has been deleted`);
+      }
+
+      // Ensure upload directory exists
+      const uploadDir = join(process.cwd(), 'uploads', '{{entityNames}}');
+      if (!existsSync(uploadDir)) {
+        mkdirSync(uploadDir, { recursive: true });
+      }
+
+      // File metadata
+      const filePath = join(uploadDir, `${Date.now()}-${file.originalname}`);
+      const fileMetadata = {
+        path: filePath,
+        name: file.originalname,
+        mimeType: file.mimetype,
+        size: file.size,
+      };
+
+      // Update entity with file metadata
+      await this.{{nameLower}}Repository.update(id, {
+        {{#each fields}}{{#if (eq type "file")}}
+        {{name}}: fileMetadata,
+        {{/if}}{{/each}}
+        updated_by: logged?.name || 'system',
+        updated_id: logged?.id || null,
+      });
+
+      // Save file to disk (Multer already handles this via diskStorage)
+      return await this.{{nameLower}}Repository.findOne({ where: { id } });
+    } catch (error) {
+      throw new BadRequestException(`Failed to upload file: ${error.message}`);
+    }
+  }
+}

@@ -16,10 +16,10 @@ export class Create{{name}}Dto {
   @ApiProperty({
     description: '{{description}}'{{#if (eq type 'enum')}},
     enum: {{tsEnumName}}{{/if}}{{#if example}},
-    example: {{example}}{{/if}}{{#if (eq type 'array')}},
+    example: '{{example}}'{{/if}}{{#if (eq type 'array')}},
     type: [{{mapTsType arrayType}}]{{/if}}{{#if (eq type 'uuid')}},
     format: 'uuid'{{/if}}
   })
-  {{name}}: {{mapTsType type this}};
+  public {{name}}: {{mapTsType type this}};
   {{/each}}
 }
