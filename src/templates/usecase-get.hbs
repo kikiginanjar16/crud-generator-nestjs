@@ -52,7 +52,7 @@ export class Get{{name}}UseCase {
       const [data, total] = await this.{{nameLower}}Repository.findAndCount({
         where,
         relations,
-        order: { [sort.field]: sort.order },
+        order: { 'created_at': 'DESC' },
         skip: (page - 1) * limit,
         take: limit,
       });
