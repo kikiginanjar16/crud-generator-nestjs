@@ -29,8 +29,8 @@ export class Update{{name}}UseCase {
       // Update entity with audit fields
       await this.{{nameLower}}Repository.update(id, {
         ...update{{name}}Dto,
-        updated_by: update{{name}}Dto.updated_by || logged?.name || 'system',
-        updated_id: update{{name}}Dto.updated_id || logged?.id || null,
+        updated_by: logged?.name || 'system',
+        updated_id: logged?.id || null,
       });
 
       // Return updated entity

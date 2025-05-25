@@ -23,8 +23,8 @@ export class Create{{name}}UseCase {
       // Create entity with audit fields
       const {{nameLower}} = this.{{nameLower}}Repository.create({
         ...create{{name}}Dto,
-        created_by: create{{name}}Dto.created_by || logged?.name || 'system',
-        created_id: create{{name}}Dto.created_id || logged?.id || null,
+        created_by: logged?.name || 'system',
+        created_id: logged?.id || null,
       });
 
       // Save entity
