@@ -25,6 +25,8 @@ export class Create{{name}}UseCase {
         ...create{{name}}Dto,
         created_by: logged?.name || 'system',
         created_id: logged?.id || null,
+        updated_by: logged?.name || 'system',
+        updated_id: logged?.id || null,
       });
 
       // Save entity
