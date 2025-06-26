@@ -13,7 +13,7 @@ export enum {{tsEnumName}} {
 {{/each}}
 {{/if}}
 
-export class Updatae{{name}}Dto {
+export class Update{{name}}Dto {
 {{#each fields}}
   @ApiProperty({
     description: '{{description}}'{{#if (eq type 'enum')}},

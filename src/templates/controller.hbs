@@ -12,7 +12,7 @@ import { Create{{name}}Dto } from '../dto/create-{{entity}}.dto';
 import { Update{{name}}Dto } from '../dto/update-{{entity}}.dto';
 
 @ApiTags('{{entityNames}}')
-@Controller('{{entityNames}}')
+@Controller({ version: '1', path: '{{entityNames}}' })
 export class {{name}}Controller {
   constructor(
     private readonly create{{name}}UseCase: Create{{name}}UseCase,
