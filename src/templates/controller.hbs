@@ -47,10 +47,12 @@ export class {{name}}Controller {
   @Get()
   @ApiOperation({ summary: 'Get all {{name}}s' })
   @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number for pagination', example: 1 }) 
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Number of items per page', example: 10 })
   async findAll(
     @Res() res: Response, 
-    @Query() page: number, 
-    @Query() limit: number
+    @Query('page') page: number, 
+    @Query('limit') limit: number
   ) {
     try {
       const data = await this.get{{name}}UseCase.paginate(page, limit, {}, [], res.locals.logged);
