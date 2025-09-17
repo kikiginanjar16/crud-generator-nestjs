@@ -1,5 +1,5 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, Res, UseInterceptors, UploadedFile } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, Res, UseInterceptors, UploadedFile, ILike } from '@nestjs/common';
+import { ApiQuery, ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { Response } from 'express';
 import { Create{{name}}UseCase } from '../usecases/create-{{entity}}.usecase';
 import { Get{{name}}UseCase } from '../usecases/get-{{entity}}.usecase';
@@ -52,10 +52,24 @@ export class {{name}}Controller {
   async findAll(
     @Res() res: Response, 
     @Query('page') page: number, 
-    @Query('limit') limit: number
+    @Query('limit') limit: number,
+    {{#each fields}}
+    @Query('{{name}}') {{name}}: {{mapTsType type this}}{{#if (eq type 'array')}}[]{{/if}}{{#unless required}} | undefined{{/unless}},
+    {{/each}}
   ) {
     try {
-      const data = await this.get{{name}}UseCase.paginate(page, limit, {}, [], res.locals.logged);
+      const whereConditions : any = {};
+      {{#each fields}}
+      if({{name}}){
+        {{#if (eq type 'string')}}
+          whereConditions['{{name}}'] = ILike('%${{name}}%') };
+        {{else}}
+          whereConditions['{{name}}'] = {{name}};
+        {{/if}}
+      }
+      {{/each}}
+
+      const data = await this.get{{name}}UseCase.paginate(page, limit, whereConditions, [], res.locals.logged);
       return res.status(200).json({
         status: true,
         message: '{{name}}s retrieved successfully',
