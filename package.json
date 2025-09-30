@@ -1,6 +1,6 @@
 {
   "name": "crud-generator-nestjs",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "A CLI tool to generate NestJS CRUD modules",
   "main": "index.js",
   "bin": {

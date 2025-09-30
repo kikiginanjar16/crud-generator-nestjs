@@ -37,8 +37,8 @@ export class Get{{name}}UseCase {
   }
 
   async paginate(
-    page: number = 1,
-    limit: number = 10,
+    page = 1,
+    limit = 10,
     filters: any = {},
     relations: string[] = [],
     logged?: LoggedUser
