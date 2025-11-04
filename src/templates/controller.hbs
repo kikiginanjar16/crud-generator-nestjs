@@ -30,11 +30,12 @@ export class {{name}}Controller {
   @ApiResponse({ status: 400, description: 'Bad Request' })
   async create(@Body() create{{name}}Dto: Create{{name}}Dto, @Res() res: Response) {
     try {
-      const data = await this.create{{name}}UseCase.execute(create{{name}}Dto, res.locals.logged);
+      const data : any = await this.create{{name}}UseCase.execute(create{{name}}Dto, res.locals.logged);
       return res.status(201).json({
         status: true,
         message: '{{name}} created successfully',
-        data,
+        data?.data,
+        data?.meta
       });
     } catch (error) {
       return res.status(400).json({
