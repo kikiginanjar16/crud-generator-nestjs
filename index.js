@@ -152,7 +152,7 @@ handlebars.registerHelper('mapColumnOptions', function (field) {
     return `@${relationType}(() => ${field.target}, ${field.inverseSide ? `(target) => target.${field.inverseSide}` : 'null'}${field.cascade ? `, { cascade: ${field.cascade} }` : ''})`;
   }
   const columnType = field.type === 'file' ? 'json' : (field.arrayType && field.type === 'array' ? field.arrayType : field.type);
-  return `@Column('${columnType}', { ${options.join(', ')} })`;
+  return `@Column({type:'${columnType}', ${options.join(', ')} })`;
 });
 
 // Helper for generating TypeScript enums
