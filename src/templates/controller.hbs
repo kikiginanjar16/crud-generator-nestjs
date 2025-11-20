@@ -34,8 +34,7 @@ export class {{name}}Controller {
       return res.status(201).json({
         status: true,
         message: '{{name}} created successfully',
-        data?.data,
-        data?.meta
+        data: data
       });
     } catch (error) {
       return res.status(400).json({
@@ -70,11 +69,12 @@ export class {{name}}Controller {
       }
       {{/each}}
 
-      const data = await this.get{{name}}UseCase.paginate(page, limit, whereConditions, [], res.locals.logged);
+      const data : any = await this.get{{name}}UseCase.paginate(page, limit, whereConditions, [], res.locals.logged);
       return res.status(200).json({
         status: true,
         message: '{{name}}s retrieved successfully',
-        data,
+        data: data?.data,
+        meta: data?.meta
       });
     } catch (error) {
       return res.status(400).json({

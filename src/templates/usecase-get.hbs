@@ -42,7 +42,7 @@ export class Get{{name}}UseCase {
     filters: any = {},
     relations: string[] = [],
     logged?: LoggedUser
-  ): Promise<{ data: {{name}}[], total: number, page: number, total_page: number }> {
+  ): Promise<{ data: {{name}}[], meta : { total: number; page: number; total_page: number } }> {
     try {
       if (page < 1 || limit < 1) {
         throw new BadRequestException('Page and limit must be positive numbers');
